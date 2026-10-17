@@ -1,0 +1,5 @@
+product_id,name,size_fl_oz,usual_price,description
+entrant,New cleaner,16,4.49,Claims biodegradable ingredients and less plastic waste. Its bottle can be refilled. It has low odor and cleans everyday stains. Old stains may need a second pass.
+standard,Familiar cleaner,16,3.99,Claims fast cleaning of tough stains. It has a sharp smell and a single-use bottle.
+budget,Value cleaner,16,2.99,Claims basic cleaning at a low price. It has no added scent and a single-use bottle.
+scented,Fresh cleaner,16,4.29,Claims everyday cleaning and a lasting citrus scent. It has a single-use bottle.

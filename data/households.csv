@@ -1,0 +1,251 @@
+household_id,income_band,cleaning_spend_usd,budget,bathrooms,usual_brand,note
+H001,50k_to_100k,13,middle,1,standard,
+H002,under_50k,7,middle,1,standard,I buy supplies during one weekly trip. I worry about cleaners that go down the drain.
+H003,50k_to_100k,29,flexible,2,budget,I usually buy the same cleaner. A weak cleaner failed on old stains.
+H004,over_100k,36,middle,2,budget,I usually buy the same cleaner. I worry about cleaners that go down the drain.
+H005,over_100k,24,middle,1,scented,
+H006,over_100k,10,flexible,1,standard,I buy supplies during one weekly trip. A low-price cleaner worked well for me.
+H007,50k_to_100k,,flexible,2,,I can pay more if a cleaner solves a problem. A low-price cleaner worked well for me.
+H008,50k_to_100k,17,middle,1,budget,I usually buy the same cleaner. I worry about cleaners that go down the drain.
+H009,50k_to_100k,16,middle,2,scented,I buy supplies during one weekly trip. I like a fresh scent after cleaning.
+H010,under_50k,25,middle,2,standard,I watch every dollar I spend on household supplies. I used one cleaner for years.
+H011,over_100k,20,flexible,1,budget,I can pay more if a cleaner solves a problem. I used one cleaner for years.
+H012,50k_to_100k,17,middle,2,budget,I can pay more if a cleaner solves a problem. A low-price cleaner worked well for me.
+H013,under_50k,25,tight,1,scented,I usually buy the same cleaner. A refill pack leaked in my cupboard.
+H014,50k_to_100k,34,middle,3,budget,I usually buy the same cleaner. A weak cleaner failed on old stains.
+H015,over_100k,,middle,1,,I usually buy the same cleaner. I do not trust green claims without proof.
+H016,50k_to_100k,11,flexible,1,standard,I can pay more if a cleaner solves a problem. A sharp cleaner smell bothered me before.
+H017,under_50k,21,tight,1,standard,
+H018,50k_to_100k,14,middle,1,budget,I usually buy the same cleaner. I like a fresh scent after cleaning.
+H019,under_50k,20,tight,1,,
+H020,under_50k,23,middle,1,budget,I can pay more if a cleaner solves a problem. I want to use fewer plastic bottles.
+H021,over_100k,28,flexible,1,budget,I look for a lower price before I buy cleaner. I want to use fewer plastic bottles.
+H022,50k_to_100k,21,tight,2,standard,I buy supplies during one weekly trip. A refill pack leaked in my cupboard.
+H023,under_50k,,tight,2,scented,I buy supplies during one weekly trip. A sharp cleaner smell bothered me before.
+H024,under_50k,21,flexible,2,scented,I usually buy the same cleaner. I used one cleaner for years.
+H025,50k_to_100k,,middle,1,scented,I look for a lower price before I buy cleaner. I want to use fewer plastic bottles.
+H026,50k_to_100k,20,middle,2,budget,I buy supplies during one weekly trip. A sharp cleaner smell bothered me before.
+H027,under_50k,13,flexible,1,,I watch every dollar I spend on household supplies. I worry about cleaners that go down the drain.
+H028,50k_to_100k,20,flexible,2,budget,I usually buy the same cleaner. A weak cleaner failed on old stains.
+H029,50k_to_100k,13,middle,1,standard,I watch every dollar I spend on household supplies. I do not trust green claims without proof.
+H030,over_100k,31,flexible,2,,I look for a lower price before I buy cleaner. I worry about cleaners that go down the drain.
+H031,50k_to_100k,26,middle,2,,I look for a lower price before I buy cleaner. I like a fresh scent after cleaning.
+H032,50k_to_100k,24,tight,2,budget,I can pay more if a cleaner solves a problem. I worry about cleaners that go down the drain.
+H033,50k_to_100k,35,middle,3,standard,I look for a lower price before I buy cleaner. A weak cleaner failed on old stains.
+H034,50k_to_100k,17,flexible,1,scented,
+H035,50k_to_100k,25,tight,3,scented,I usually buy the same cleaner. A weak cleaner failed on old stains.
+H036,under_50k,25,middle,1,budget,I watch every dollar I spend on household supplies. I used one cleaner for years.
+H037,under_50k,22,tight,1,standard,I watch every dollar I spend on household supplies. I want to use fewer plastic bottles.
+H038,under_50k,24,middle,2,,I usually buy the same cleaner. A weak cleaner failed on old stains.
+H039,50k_to_100k,17,middle,1,standard,I usually buy the same cleaner. A weak cleaner failed on old stains.
+H040,50k_to_100k,19,tight,1,scented,I buy supplies during one weekly trip. I worry about cleaners that go down the drain.
+H041,50k_to_100k,18,tight,1,standard,I usually buy the same cleaner. A weak cleaner failed on old stains.
+H042,50k_to_100k,30,middle,1,budget,I can pay more if a cleaner solves a problem. I want to use fewer plastic bottles.
+H043,over_100k,39,middle,2,budget,
+H044,under_50k,23,tight,2,budget,
+H045,over_100k,30,flexible,2,budget,I look for a lower price before I buy cleaner. I like a fresh scent after cleaning.
+H046,50k_to_100k,27,tight,3,budget,I look for a lower price before I buy cleaner. A sharp cleaner smell bothered me before.
+H047,50k_to_100k,24,middle,2,standard,I usually buy the same cleaner. I used one cleaner for years.
+H048,50k_to_100k,,tight,1,standard,I buy supplies during one weekly trip. A weak cleaner failed on old stains.
+H049,50k_to_100k,,middle,2,standard,I can pay more if a cleaner solves a problem. I like a fresh scent after cleaning.
+H050,50k_to_100k,29,middle,2,scented,I can pay more if a cleaner solves a problem. A refill pack leaked in my cupboard.
+H051,50k_to_100k,29,flexible,2,standard,I look for a lower price before I buy cleaner. A sharp cleaner smell bothered me before.
+H052,50k_to_100k,31,middle,3,budget,I buy supplies during one weekly trip. A sharp cleaner smell bothered me before.
+H053,over_100k,23,middle,2,budget,I look for a lower price before I buy cleaner. A weak cleaner failed on old stains.
+H054,50k_to_100k,21,middle,1,scented,I buy supplies during one weekly trip. I want to use fewer plastic bottles.
+H055,50k_to_100k,22,tight,2,budget,I watch every dollar I spend on household supplies. I worry about cleaners that go down the drain.
+H056,under_50k,36,middle,3,budget,
+H057,over_100k,28,flexible,1,standard,I watch every dollar I spend on household supplies. A sharp cleaner smell bothered me before.
+H058,50k_to_100k,17,middle,1,,I can pay more if a cleaner solves a problem. A weak cleaner failed on old stains.
+H059,50k_to_100k,21,middle,2,standard,I can pay more if a cleaner solves a problem. I worry about cleaners that go down the drain.
+H060,over_100k,29,flexible,2,scented,I buy supplies during one weekly trip. A refill pack leaked in my cupboard.
+H061,50k_to_100k,24,flexible,1,scented,I buy supplies during one weekly trip. A refill pack leaked in my cupboard.
+H062,50k_to_100k,,middle,1,standard,I buy supplies during one weekly trip. I used one cleaner for years.
+H063,under_50k,29,tight,3,standard,
+H064,50k_to_100k,27,middle,1,standard,I buy supplies during one weekly trip. I like a fresh scent after cleaning.
+H065,under_50k,37,tight,3,standard,I look for a lower price before I buy cleaner. I used one cleaner for years.
+H066,under_50k,25,tight,1,standard,I buy supplies during one weekly trip. I worry about cleaners that go down the drain.
+H067,over_100k,25,flexible,1,standard,I buy supplies during one weekly trip. A refill pack leaked in my cupboard.
+H068,under_50k,37,middle,3,budget,I usually buy the same cleaner. I like a fresh scent after cleaning.
+H069,under_50k,19,flexible,1,standard,I usually buy the same cleaner. I worry about cleaners that go down the drain.
+H070,50k_to_100k,29,tight,1,scented,
+H071,under_50k,19,tight,1,budget,I buy supplies during one weekly trip. A sharp cleaner smell bothered me before.
+H072,over_100k,12,flexible,1,budget,I can pay more if a cleaner solves a problem. A weak cleaner failed on old stains.
+H073,under_50k,,flexible,1,standard,
+H074,50k_to_100k,19,middle,2,budget,I can pay more if a cleaner solves a problem. A weak cleaner failed on old stains.
+H075,over_100k,26,flexible,2,budget,I watch every dollar I spend on household supplies. I used one cleaner for years.
+H076,under_50k,12,tight,1,budget,I buy supplies during one weekly trip. A weak cleaner failed on old stains.
+H077,50k_to_100k,28,middle,2,scented,I look for a lower price before I buy cleaner. A low-price cleaner worked well for me.
+H078,under_50k,,tight,2,standard,I look for a lower price before I buy cleaner. I want to use fewer plastic bottles.
+H079,over_100k,17,middle,1,budget,I watch every dollar I spend on household supplies. I used one cleaner for years.
+H080,50k_to_100k,23,tight,2,budget,
+H081,50k_to_100k,29,tight,2,standard,
+H082,50k_to_100k,10,middle,1,standard,I buy supplies during one weekly trip. I like a fresh scent after cleaning.
+H083,over_100k,32,flexible,2,standard,I usually buy the same cleaner. A weak cleaner failed on old stains.
+H084,50k_to_100k,,tight,1,budget,
+H085,under_50k,14,tight,1,standard,I look for a lower price before I buy cleaner. I used one cleaner for years.
+H086,over_100k,37,middle,2,budget,I look for a lower price before I buy cleaner. I used one cleaner for years.
+H087,over_100k,,flexible,1,scented,I look for a lower price before I buy cleaner. A sharp cleaner smell bothered me before.
+H088,over_100k,21,flexible,2,standard,I can pay more if a cleaner solves a problem. I worry about cleaners that go down the drain.
+H089,over_100k,21,middle,1,budget,I watch every dollar I spend on household supplies. I like a fresh scent after cleaning.
+H090,50k_to_100k,27,tight,2,scented,I buy supplies during one weekly trip. I do not trust green claims without proof.
+H091,under_50k,33,tight,2,,
+H092,over_100k,29,middle,2,,I buy supplies during one weekly trip. I want to use fewer plastic bottles.
+H093,50k_to_100k,25,middle,2,budget,I can pay more if a cleaner solves a problem. A low-price cleaner worked well for me.
+H094,under_50k,15,tight,2,scented,
+H095,50k_to_100k,18,middle,2,budget,I buy supplies during one weekly trip. I do not trust green claims without proof.
+H096,50k_to_100k,19,tight,2,scented,I can pay more if a cleaner solves a problem. A low-price cleaner worked well for me.
+H097,over_100k,22,flexible,1,budget,
+H098,under_50k,12,tight,1,standard,I can pay more if a cleaner solves a problem. I do not trust green claims without proof.
+H099,50k_to_100k,14,tight,1,scented,I look for a lower price before I buy cleaner. A sharp cleaner smell bothered me before.
+H100,over_100k,45,middle,2,budget,
+H101,50k_to_100k,32,middle,2,standard,I look for a lower price before I buy cleaner. I like a fresh scent after cleaning.
+H102,over_100k,15,flexible,1,standard,
+H103,50k_to_100k,26,flexible,1,standard,I buy supplies during one weekly trip. I want to use fewer plastic bottles.
+H104,over_100k,,middle,2,standard,I watch every dollar I spend on household supplies. A weak cleaner failed on old stains.
+H105,50k_to_100k,,tight,2,standard,I usually buy the same cleaner. A low-price cleaner worked well for me.
+H106,over_100k,37,tight,2,standard,I buy supplies during one weekly trip. I worry about cleaners that go down the drain.
+H107,50k_to_100k,,middle,1,standard,I can pay more if a cleaner solves a problem. I do not trust green claims without proof.
+H108,50k_to_100k,27,middle,3,standard,I watch every dollar I spend on household supplies. I worry about cleaners that go down the drain.
+H109,50k_to_100k,20,tight,2,standard,I usually buy the same cleaner. A refill pack leaked in my cupboard.
+H110,under_50k,30,tight,3,budget,I usually buy the same cleaner. A sharp cleaner smell bothered me before.
+H111,under_50k,11,middle,1,standard,I watch every dollar I spend on household supplies. I want to use fewer plastic bottles.
+H112,50k_to_100k,19,middle,1,budget,I usually buy the same cleaner. I used one cleaner for years.
+H113,50k_to_100k,27,tight,2,budget,I look for a lower price before I buy cleaner. I worry about cleaners that go down the drain.
+H114,over_100k,8,middle,1,budget,
+H115,50k_to_100k,32,middle,2,standard,
+H116,50k_to_100k,25,middle,2,budget,I usually buy the same cleaner. I do not trust green claims without proof.
+H117,over_100k,25,middle,2,budget,I can pay more if a cleaner solves a problem. I want to use fewer plastic bottles.
+H118,under_50k,18,middle,1,standard,I buy supplies during one weekly trip. I worry about cleaners that go down the drain.
+H119,50k_to_100k,23,flexible,2,standard,I usually buy the same cleaner. A weak cleaner failed on old stains.
+H120,over_100k,35,flexible,2,scented,I usually buy the same cleaner. I worry about cleaners that go down the drain.
+H121,50k_to_100k,15,middle,1,scented,
+H122,over_100k,23,flexible,2,budget,
+H123,over_100k,32,middle,2,budget,
+H124,50k_to_100k,29,flexible,1,standard,I usually buy the same cleaner. A low-price cleaner worked well for me.
+H125,50k_to_100k,16,middle,2,standard,I watch every dollar I spend on household supplies. I do not trust green claims without proof.
+H126,50k_to_100k,19,flexible,1,standard,I buy supplies during one weekly trip. I do not trust green claims without proof.
+H127,50k_to_100k,18,flexible,2,standard,I can pay more if a cleaner solves a problem. A low-price cleaner worked well for me.
+H128,50k_to_100k,19,middle,2,scented,I look for a lower price before I buy cleaner. I used one cleaner for years.
+H129,50k_to_100k,9,middle,1,scented,I watch every dollar I spend on household supplies. I worry about cleaners that go down the drain.
+H130,50k_to_100k,16,tight,1,scented,
+H131,over_100k,24,tight,2,budget,
+H132,over_100k,30,flexible,2,standard,I watch every dollar I spend on household supplies. A refill pack leaked in my cupboard.
+H133,50k_to_100k,20,middle,2,budget,I watch every dollar I spend on household supplies. A sharp cleaner smell bothered me before.
+H134,over_100k,27,flexible,2,standard,
+H135,under_50k,19,tight,2,budget,I watch every dollar I spend on household supplies. I like a fresh scent after cleaning.
+H136,50k_to_100k,,flexible,2,,I usually buy the same cleaner. I want to use fewer plastic bottles.
+H137,50k_to_100k,26,flexible,2,standard,I look for a lower price before I buy cleaner. A sharp cleaner smell bothered me before.
+H138,50k_to_100k,20,middle,1,budget,I usually buy the same cleaner. I used one cleaner for years.
+H139,over_100k,28,middle,2,budget,
+H140,50k_to_100k,16,tight,2,scented,I look for a lower price before I buy cleaner. I worry about cleaners that go down the drain.
+H141,50k_to_100k,22,middle,1,,I watch every dollar I spend on household supplies. I like a fresh scent after cleaning.
+H142,50k_to_100k,18,tight,2,budget,
+H143,50k_to_100k,34,middle,2,standard,I can pay more if a cleaner solves a problem. I used one cleaner for years.
+H144,under_50k,41,tight,2,budget,I usually buy the same cleaner. I worry about cleaners that go down the drain.
+H145,under_50k,16,tight,1,,
+H146,over_100k,16,middle,2,budget,I usually buy the same cleaner. I like a fresh scent after cleaning.
+H147,under_50k,,middle,1,budget,I usually buy the same cleaner. I like a fresh scent after cleaning.
+H148,under_50k,,middle,1,budget,I usually buy the same cleaner. A low-price cleaner worked well for me.
+H149,under_50k,,middle,1,scented,I buy supplies during one weekly trip. A weak cleaner failed on old stains.
+H150,50k_to_100k,19,middle,1,standard,I watch every dollar I spend on household supplies. A sharp cleaner smell bothered me before.
+H151,50k_to_100k,21,middle,1,,I watch every dollar I spend on household supplies. A refill pack leaked in my cupboard.
+H152,50k_to_100k,22,middle,1,scented,I look for a lower price before I buy cleaner. I worry about cleaners that go down the drain.
+H153,over_100k,42,middle,1,standard,I buy supplies during one weekly trip. A low-price cleaner worked well for me.
+H154,under_50k,19,tight,1,budget,I look for a lower price before I buy cleaner. A low-price cleaner worked well for me.
+H155,under_50k,14,tight,1,standard,I watch every dollar I spend on household supplies. I do not trust green claims without proof.
+H156,50k_to_100k,17,middle,2,budget,I can pay more if a cleaner solves a problem. I do not trust green claims without proof.
+H157,over_100k,35,flexible,1,standard,I can pay more if a cleaner solves a problem. A weak cleaner failed on old stains.
+H158,under_50k,18,tight,1,scented,I can pay more if a cleaner solves a problem. I worry about cleaners that go down the drain.
+H159,50k_to_100k,34,middle,2,,I watch every dollar I spend on household supplies. I used one cleaner for years.
+H160,over_100k,28,middle,2,standard,I watch every dollar I spend on household supplies. I want to use fewer plastic bottles.
+H161,over_100k,18,flexible,1,budget,I can pay more if a cleaner solves a problem. A weak cleaner failed on old stains.
+H162,over_100k,,flexible,2,budget,I buy supplies during one weekly trip. I like a fresh scent after cleaning.
+H163,under_50k,15,middle,1,standard,I can pay more if a cleaner solves a problem. I want to use fewer plastic bottles.
+H164,50k_to_100k,7,flexible,1,scented,
+H165,50k_to_100k,17,tight,1,budget,I look for a lower price before I buy cleaner. A refill pack leaked in my cupboard.
+H166,under_50k,16,tight,2,budget,
+H167,50k_to_100k,21,tight,2,standard,I buy supplies during one weekly trip. I do not trust green claims without proof.
+H168,under_50k,27,tight,2,budget,I can pay more if a cleaner solves a problem. A weak cleaner failed on old stains.
+H169,over_100k,34,flexible,3,standard,I can pay more if a cleaner solves a problem. A weak cleaner failed on old stains.
+H170,50k_to_100k,,tight,1,standard,I can pay more if a cleaner solves a problem. I do not trust green claims without proof.
+H171,over_100k,23,middle,2,scented,I look for a lower price before I buy cleaner. I do not trust green claims without proof.
+H172,50k_to_100k,25,tight,2,budget,I can pay more if a cleaner solves a problem. I want to use fewer plastic bottles.
+H173,over_100k,24,middle,1,budget,I usually buy the same cleaner. I want to use fewer plastic bottles.
+H174,over_100k,,flexible,3,,I buy supplies during one weekly trip. A low-price cleaner worked well for me.
+H175,50k_to_100k,,middle,1,standard,I usually buy the same cleaner. I want to use fewer plastic bottles.
+H176,under_50k,19,middle,2,standard,
+H177,under_50k,38,middle,3,budget,
+H178,50k_to_100k,12,middle,1,standard,I look for a lower price before I buy cleaner. A low-price cleaner worked well for me.
+H179,50k_to_100k,21,tight,2,standard,I watch every dollar I spend on household supplies. I want to use fewer plastic bottles.
+H180,50k_to_100k,15,middle,1,standard,I watch every dollar I spend on household supplies. A refill pack leaked in my cupboard.
+H181,under_50k,26,flexible,1,standard,I buy supplies during one weekly trip. I like a fresh scent after cleaning.
+H182,under_50k,18,middle,1,budget,
+H183,50k_to_100k,21,flexible,1,budget,I watch every dollar I spend on household supplies. A refill pack leaked in my cupboard.
+H184,50k_to_100k,18,tight,1,budget,I look for a lower price before I buy cleaner. A sharp cleaner smell bothered me before.
+H185,50k_to_100k,19,middle,2,standard,I look for a lower price before I buy cleaner. I used one cleaner for years.
+H186,under_50k,7,tight,1,scented,
+H187,50k_to_100k,22,tight,1,budget,I buy supplies during one weekly trip. A refill pack leaked in my cupboard.
+H188,50k_to_100k,16,tight,1,budget,
+H189,over_100k,35,flexible,2,,I buy supplies during one weekly trip. A weak cleaner failed on old stains.
+H190,under_50k,,flexible,1,scented,I can pay more if a cleaner solves a problem. A low-price cleaner worked well for me.
+H191,under_50k,11,tight,1,budget,I usually buy the same cleaner. A weak cleaner failed on old stains.
+H192,under_50k,8,tight,1,budget,I watch every dollar I spend on household supplies. I like a fresh scent after cleaning.
+H193,50k_to_100k,23,middle,2,scented,I look for a lower price before I buy cleaner. I do not trust green claims without proof.
+H194,50k_to_100k,,middle,1,budget,I can pay more if a cleaner solves a problem. I want to use fewer plastic bottles.
+H195,50k_to_100k,14,middle,1,standard,I look for a lower price before I buy cleaner. A low-price cleaner worked well for me.
+H196,50k_to_100k,25,middle,2,budget,I usually buy the same cleaner. A weak cleaner failed on old stains.
+H197,50k_to_100k,22,middle,1,budget,I buy supplies during one weekly trip. I do not trust green claims without proof.
+H198,50k_to_100k,26,middle,2,scented,I watch every dollar I spend on household supplies. A sharp cleaner smell bothered me before.
+H199,50k_to_100k,24,tight,2,budget,I can pay more if a cleaner solves a problem. I do not trust green claims without proof.
+H200,50k_to_100k,22,flexible,2,standard,I watch every dollar I spend on household supplies. A low-price cleaner worked well for me.
+H201,under_50k,13,tight,1,standard,I can pay more if a cleaner solves a problem. I like a fresh scent after cleaning.
+H202,50k_to_100k,,flexible,2,standard,
+H203,under_50k,20,tight,1,budget,I usually buy the same cleaner. A low-price cleaner worked well for me.
+H204,under_50k,24,tight,1,,I can pay more if a cleaner solves a problem. I like a fresh scent after cleaning.
+H205,under_50k,,tight,1,budget,I watch every dollar I spend on household supplies. I like a fresh scent after cleaning.
+H206,50k_to_100k,22,middle,2,standard,I buy supplies during one weekly trip. I want to use fewer plastic bottles.
+H207,over_100k,29,middle,1,,
+H208,over_100k,32,middle,2,scented,I buy supplies during one weekly trip. I worry about cleaners that go down the drain.
+H209,under_50k,13,flexible,1,standard,I look for a lower price before I buy cleaner. A weak cleaner failed on old stains.
+H210,50k_to_100k,18,tight,1,standard,I watch every dollar I spend on household supplies. A low-price cleaner worked well for me.
+H211,under_50k,,tight,1,,
+H212,under_50k,20,tight,3,budget,I can pay more if a cleaner solves a problem. I worry about cleaners that go down the drain.
+H213,50k_to_100k,22,middle,2,standard,I can pay more if a cleaner solves a problem. I do not trust green claims without proof.
+H214,50k_to_100k,11,middle,1,standard,I buy supplies during one weekly trip. A weak cleaner failed on old stains.
+H215,50k_to_100k,15,tight,1,budget,I usually buy the same cleaner. I worry about cleaners that go down the drain.
+H216,under_50k,21,tight,1,standard,
+H217,50k_to_100k,18,middle,2,standard,
+H218,50k_to_100k,,flexible,3,standard,I usually buy the same cleaner. I like a fresh scent after cleaning.
+H219,50k_to_100k,24,tight,2,standard,I look for a lower price before I buy cleaner. I used one cleaner for years.
+H220,50k_to_100k,13,flexible,1,standard,I can pay more if a cleaner solves a problem. A weak cleaner failed on old stains.
+H221,50k_to_100k,,middle,2,standard,I watch every dollar I spend on household supplies. A refill pack leaked in my cupboard.
+H222,under_50k,19,tight,2,standard,I usually buy the same cleaner. I do not trust green claims without proof.
+H223,50k_to_100k,,middle,2,standard,I can pay more if a cleaner solves a problem. I like a fresh scent after cleaning.
+H224,under_50k,18,flexible,2,scented,I look for a lower price before I buy cleaner. I worry about cleaners that go down the drain.
+H225,under_50k,28,tight,2,standard,I buy supplies during one weekly trip. I want to use fewer plastic bottles.
+H226,over_100k,19,middle,1,standard,I look for a lower price before I buy cleaner. A refill pack leaked in my cupboard.
+H227,under_50k,11,tight,1,budget,I look for a lower price before I buy cleaner. A low-price cleaner worked well for me.
+H228,over_100k,25,flexible,1,standard,I watch every dollar I spend on household supplies. A weak cleaner failed on old stains.
+H229,under_50k,24,tight,2,scented,I can pay more if a cleaner solves a problem. I like a fresh scent after cleaning.
+H230,over_100k,35,middle,3,standard,I watch every dollar I spend on household supplies. I worry about cleaners that go down the drain.
+H231,50k_to_100k,18,middle,2,scented,I usually buy the same cleaner. A sharp cleaner smell bothered me before.
+H232,50k_to_100k,26,middle,3,scented,I buy supplies during one weekly trip. A low-price cleaner worked well for me.
+H233,under_50k,15,middle,1,standard,I watch every dollar I spend on household supplies. A refill pack leaked in my cupboard.
+H234,under_50k,21,tight,1,budget,I buy supplies during one weekly trip. A refill pack leaked in my cupboard.
+H235,50k_to_100k,18,tight,2,scented,
+H236,under_50k,20,tight,3,standard,I can pay more if a cleaner solves a problem. I do not trust green claims without proof.
+H237,50k_to_100k,,tight,1,standard,I usually buy the same cleaner. I like a fresh scent after cleaning.
+H238,under_50k,20,tight,2,standard,I look for a lower price before I buy cleaner. A low-price cleaner worked well for me.
+H239,under_50k,14,tight,1,standard,
+H240,50k_to_100k,21,middle,1,budget,I look for a lower price before I buy cleaner. A sharp cleaner smell bothered me before.
+H241,50k_to_100k,25,tight,2,,I watch every dollar I spend on household supplies. I like a fresh scent after cleaning.
+H242,under_50k,19,tight,1,standard,I look for a lower price before I buy cleaner. I want to use fewer plastic bottles.
+H243,over_100k,17,flexible,1,standard,I watch every dollar I spend on household supplies. I used one cleaner for years.
+H244,under_50k,10,middle,1,,I can pay more if a cleaner solves a problem. I worry about cleaners that go down the drain.
+H245,50k_to_100k,16,middle,1,budget,I can pay more if a cleaner solves a problem. A refill pack leaked in my cupboard.
+H246,50k_to_100k,23,tight,1,scented,I can pay more if a cleaner solves a problem. A refill pack leaked in my cupboard.
+H247,50k_to_100k,21,middle,2,standard,I usually buy the same cleaner. A refill pack leaked in my cupboard.
+H248,50k_to_100k,30,middle,3,standard,I look for a lower price before I buy cleaner. A sharp cleaner smell bothered me before.
+H249,under_50k,20,tight,1,standard,I buy supplies during one weekly trip. A low-price cleaner worked well for me.
+H250,under_50k,33,middle,2,budget,I look for a lower price before I buy cleaner. A low-price cleaner worked well for me.
