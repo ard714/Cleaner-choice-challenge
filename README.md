@@ -53,7 +53,7 @@ simco-intern-challenge-main/
 │
 ├── 📑 Core Submission Deliverables
 │   ├── FIRST.md                 # Initial pre-registered hypothesis & falsification criteria (114 words)
-│   ├── FINAL.md                 # Strategic launch policy, breakeven bound & falsification test (172 words)
+│   ├── FINAL.md                 # Strategic launch policy, breakeven bound & falsification test (175 words)
 │   ├── METHODS.md               # 11-section technical methodology, math, and failure postmortems
 │   ├── APP_GUIDE.md             # Interactive web application user manual & testing guide
 │   └── README.md                # Project overview, deliverables table, and quickstart
@@ -70,12 +70,9 @@ simco-intern-challenge-main/
 │   ├── run_baseline.py          # Starter baseline replication script
 │   ├── run_champion.py          # Direct comparison of baseline vs. champion choice model
 │   ├── baseline.py              # Starter heuristic baseline choice model
-│   └── evaluator.py             # Strict GroupKFold cross-validation & evaluation metrics
-│
-├── 📁 scripts/                  # Standalone analysis & data generation tools
-│   ├── eda.py                   # Exploratory data analysis & vocabulary taxonomy
-│   ├── generate_synthetic.py    # Synthetic stress-testing dataset generator
-│   └── README.md                # Documentation for auxiliary tools
+│   ├── evaluator.py             # Strict GroupKFold cross-validation & evaluation metrics
+│   ├── eda.py                   # Exploratory data analysis & phrase dictionary extraction
+│   └── generate_synthetic.py    # Generator for synthetic stress-test households & visits
 │
 ├── 📁 data/                     # Data assets (both public challenge splits + synthetic stress tests)
 │   ├── products.csv             # 4 cleaner catalog specifications (volume, form, scent)
