@@ -41,6 +41,12 @@ To run individual reproducible benchmarks:
 - **Champion Choice Model Benchmark**: `python run_champion.py`
 - **Interactive Server Directly**: `python app.py`
 
+### Documentation Index
+- **[Interactive App User Guide (APP_GUIDE.md)](APP_GUIDE.md)**: Tab-by-tab walkthrough of the simulator, trust warnings, holdout benchmark, policy matrix, and live ingestion.
+- **[Technical Methodology (METHODS.md)](METHODS.md)**: Full econometric formulation, 14 runs, failed hypotheses, holdout protocol, and unit economics.
+- **[Initial Pre-Registration (FIRST.md)](FIRST.md)**: Pre-registered initial hypothesis and testing criteria ($\le 120$ words).
+- **[Final Launch Recommendation (FINAL.md)](FINAL.md)**: Strategic launch policy, breakeven bound, and falsification test ($\le 200$ words).
+
 Use Python 3.10 or later. The starter uses the Python standard library. It prints results for a build set and a check set.
 
 `households.csv` holds answers from one survey before the visits. It includes income bands, budget pressure, and reported monthly spend on cleaning supplies.
