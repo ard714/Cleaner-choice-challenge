@@ -131,7 +131,7 @@ def main():
         "Evaluate the champion choice model against 50 synthetic stress-test visits (10 households H901-H910) "
         "designed with extreme out-of-distribution prices, maximum entropy ties, and contradictory feedback. "
         "Formulate and audit a rigorous 'I Don't Know' epistemic uncertainty engine to protect decision-makers "
-        "from false-confidence hallucinations when the empirical data cannot support a conclusion."
+        "from false-certainty extrapolations when the empirical data cannot support a conclusion."
     )
 
     expectation = (
@@ -244,11 +244,11 @@ def main():
         f"- OOD Price Extrapolation Hazard: {ood_count} visits successfully caught\n"
         f"- Equiprobable Tie / High Entropy Hazard: {entropy_count} visits successfully caught\n"
         f"- Contradictory Sentiment Hazard: {sentiment_count} visits successfully caught\n"
-        f"- Hallucination Prevention: 100% of extreme price points and equiprobable ties successfully abstained."
+        f"- Extrapolation Prevention: 100% of extreme price points and equiprobable ties successfully abstained."
     )
 
     notes = (
-        "SUCCESSFUL TRUST & ABSTENTION AUDIT: Demonstrated epistemic humility by preventing false-certainty hallucinations. "
+        "SUCCESSFUL TRUST & ABSTENTION AUDIT: Demonstrated epistemic humility by preventing false-certainty extrapolations. "
         "When presented with extreme out-of-distribution prices or uninformative equiprobable ties, the model triggers an "
         "explicit 'I Don't Know' warning. This proves to stakeholders that the system knows what it does not know."
     )

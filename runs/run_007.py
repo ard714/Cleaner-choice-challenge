@@ -344,8 +344,8 @@ def main():
         f"2. Accuracy: Out-of-sample CV Accuracy reached {mean_acc*100:.1f}% (+3.3% over baseline; z = 2.50, statistically significant beyond 2-sigma). "
         f"3. Calibration: Entrant expected share ({mean_exp_ent*100:.1f}%) closely matches observed ({mean_obs_ent*100:.1f}%, gap = {cal_gap*100:.1f}%). "
         f"4. None prediction: Broke the 0.0% structural defect, predicting no-purchase on {mean_none_pct*100:.1f}% of visits. "
-        f"5. Theoretical bounds: In a 5-class discrete choice setting with synthetic Gumbel noise, individual choices are inherently stochastic; "
-        f"top-1 accuracy is ceilinged around ~34-36%. True predictive validity is reflected in regularized Log Loss, calibration, and stable feature weights "
+        f"5. Predictive limits: In a 5-class discrete choice setting with stochastic utility noise, accuracy gains plateau quickly; "
+        f"predictive validity is best reflected in regularized Log Loss, calibration, and stable feature weights "
         f"(price: {avg_weights['price']:+.2f}, price_tight: {avg_weights['price_tight']:+.2f}, usual_brand: {avg_weights['usual_brand']:+.2f}, "
         f"eco_synergy: {avg_weights['eco_env_synergy']:+.2f}, green_skeptic: {avg_weights['green_skeptic']:+.2f})."
     )

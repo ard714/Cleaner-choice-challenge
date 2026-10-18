@@ -67,17 +67,17 @@ All experiments were executed with pre-registered expectations, failure criteria
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
 | **`run_001_baseline`** | `v0.1-starter` | Initial benchmark of starter kit rules. | 29.0% | 28.0% | 1.5793 | 0.7850 | 5.2% | Baseline establishes systematic under-prediction defect. |
 | **`run_002_baseline_cv`** | `v0.1-starter` | 5-Fold GroupKFold CV strictly clustered by `household_id`. | 29.0% | Untouched | 1.5793 | 0.7867 | 5.4% | Proves baseline under-prediction is structural, not sample noise. |
-| **`run_003_nopurchase_ablation`** | `v0.2-inventory` | Test removing $+0.35$ inventory buffer ($0.00$ vs $+0.05$). | 29.0% | Untouched | 1.5864 | 0.7889 | 5.6% | **FAILED HYPOTHESIS**: Zero buffer degraded Log Loss (+0.0071). |
-| **`run_004_calibrated_ascs`** | `v0.3-ascs` | Introduce calibrated ASCs (`entrant: 2.75, standard: 2.40...`). | 30.9% | Untouched | 1.5637 | 0.7793 | 2.1% | Closes entrant gap, but manual coefficient guessing is ungrounded. |
-| **`run_005_feedback_stain_memory`** | `v0.4-memory` | Incorporate causal post-use stain churn penalty ($-1.50$) and odor penalty ($-0.80$). | 31.0% | Untouched | 1.5604 | 0.7766 | 1.9% | Better metrics, but manual heuristic weights remain brittle. |
-| **`run_006_failed_relative_pricing`** | `v0.5-rel-pricing` | Add relative shelf price gap: $0.25 \times (P_{\text{entrant}} - \min P_{\text{comp}})$. | 29.6% | Untouched | 1.5896 | 0.7884 | 3.8% | **FAILED HYPOTHESIS**: Extreme collinearity ($r=0.88$) degraded accuracy. |
-| **`run_007_mle_training`** | `v1.0-mle-baseline` | First statistical parameter estimation: 23-parameter MLE choice model via Adam. | 32.3% | Untouched | 1.5587 | 0.7772 | 0.3% | Breakthrough: Replaces heuristic guessing with statistical MLE. |
-| **`run_008_audit_and_check_evaluation`** | `v1.0-mle-baseline` | Audit 8 trust mandates; first evaluation on `check_visits.csv` (300 visits). | 32.3% | 32.3% | 1.5340 | 0.7683 | 0.3% | Verified zero household leakage and causal temporal separation. |
+| **`run_003_nopurchase_ablation`** | `v0.2-inventory-ablation` | Test removing $+0.35$ inventory buffer ($0.00$ vs $+0.05$). | 29.0% | Untouched | 1.5864 | 0.7889 | 5.6% | **FAILED HYPOTHESIS**: Zero buffer degraded Log Loss (+0.0071). |
+| **`run_004_calibrated_ascs`** | `v0.3-calibrated-ascs` | Introduce calibrated ASCs (`entrant: 2.75, standard: 2.40...`). | 30.9% | Untouched | 1.5637 | 0.7793 | 2.1% | Closes entrant gap, but manual coefficient guessing is ungrounded. |
+| **`run_005_feedback_stain_memory`** | `v0.4-feedback-memory` | Incorporate longitudinal post-use stain churn penalty ($-1.50$) and odor penalty ($-0.80$). | 31.0% | Untouched | 1.5604 | 0.7766 | 1.9% | Better metrics, but manual heuristic weights remain brittle. |
+| **`run_006_failed_relative_pricing`** | `v0.5-relative-pricing-ablation` | Add relative shelf price gap: $0.25 \times (P_{\text{entrant}} - \min P_{\text{comp}})$. | 29.6% | Untouched | 1.5896 | 0.7884 | 3.8% | **FAILED HYPOTHESIS**: Extreme collinearity ($r=0.88$) degraded accuracy. |
+| **`run_007_mle_training`** | `v1.0-mle-trained` | First statistical parameter estimation: 23-parameter MLE choice model via Adam. | 32.3% | Untouched | 1.5587 | 0.7772 | 0.3% | Breakthrough: Replaces heuristic guessing with statistical MLE. |
+| **`run_008_audit_and_check_evaluation`** | `v1.0-mle-frozen-audited` | Audit 8 trust mandates; first evaluation on `check_visits.csv` (300 visits). | 32.3% | 32.3% | 1.5340 | 0.7683 | 0.3% | Verified zero household leakage and temporal separation. |
 | **`run_009_accuracy_refinement`** | `v1.1-mle-refined` | Add demographic interaction terms: `high_income_entrant` ($>\$100\text{k}$) and `none_many_baths` ($\ge 3$). | 32.5% | Untouched | 1.5537 | 0.7750 | 0.2% | **CHAMPION MODEL**: Highest out-of-fold log loss lift without overfitting. |
 | **`run_010_nested_logit`** | `v2.0-nested-logit` | Two-Stage Nested Logit (Stage 1: Buy vs None; Stage 2: 4 Brands). | 32.3% | Untouched | 1.5578 | 0.7761 | 0.5% | **FAILED HYPOTHESIS**: Sequential estimation caused cascading error. |
-| **`run_011_frozen_check_evaluation`** | `v1.1-mle-refined` | Confirmatory holdout generalization audit of Champion on `check_visits.csv`. | 33.0% | 31.0% | 1.5505 | 0.7725 | 1.6% | Confirms holdout generalization across 50 unseen households. |
-| **`run_012_policy_simulation`** | `v1.1-mle-refined` | Counterfactual market simulation across 18 strategic launch cells (250 households). | 32.5% | 31.0% | 1.5537 | 0.7750 | 0.2% | Recommends **$4.49 Online Environment** launch; defines breakeven bounds. |
-| **`run_013_trust_synthetic_stress_test`** | `v1.2-trust-engine` | Evaluates 50 synthetic stress visits; audits "I Don't Know" abstention engine. | N/A | N/A | N/A | N/A | N/A | Caught 100% of extreme OOD prices and maximum entropy ties. |
+| **`run_011_frozen_check_evaluation`** | `v1.1-mle-refined-frozen` | Confirmatory holdout generalization audit of Champion on `check_visits.csv`. | 32.5% | 31.0% | 1.5505 | 0.7725 | 1.6% | Confirms holdout generalization across 50 unseen households (33.0% in-sample). |
+| **`run_012_policy_simulation`** | `v1.1-mle-refined-policy` | Counterfactual market simulation across 18 strategic launch cells (250 households). | 32.5% | 31.0% | 1.5537 | 0.7750 | 0.2% | Recommends **$4.49 Online Environment** launch; defines breakeven bounds. |
+| **`run_013_trust_synthetic_stress_test`** | `v1.2-trust-abstention-champion` | Evaluates 50 synthetic stress visits; audits "I Don't Know" abstention engine. | N/A | N/A | N/A | N/A | N/A | Caught 100% of extreme OOD prices and maximum entropy ties. |
 
 ---
 
@@ -109,7 +109,7 @@ The challenge README explicitly mandates:
 
 ### Transparent Two-Stage Sequence:
 1. **Stage 1 (Initial Test in Run 008)**:
-   The untouched `check_visits.csv` was first evaluated on the initial 23-parameter model (`v1.0-mle-baseline`), achieving **32.33% Top-1 Accuracy** (97/300) and **1.5340 Log Loss**.
+   The untouched `check_visits.csv` was first evaluated on the initial 23-parameter model (`v1.0-mle-frozen-audited`), achieving **32.33% Top-1 Accuracy** (97/300) and **1.5340 Log Loss**.
 2. **Stage 2 (Build Refinement on `visits.csv` in Run 009)**:
    Exploratory data analysis strictly on the 1,200 build visits identified two unmodeled behavioral segments:
    - High-income households ($> \$100\text{k}$) had higher green willingness to pay ($26.2\%$ entrant share vs. $18.3\%$).
@@ -118,7 +118,7 @@ The challenge README explicitly mandates:
 3. **Stage 3 (Confirmatory Generalization Audit in Run 011)**:
    `check_visits.csv` was re-evaluated as a **Confirmatory Holdout Audit**, scoring **31.00% Top-1 Accuracy** (93/300), **1.5505 Log Loss**, and closing the entrant calibration gap to **1.6%**.
    
-By fully reporting this three-way progression (Baseline $28.0\% \to$ Initial Check $32.3\% \to$ Confirmatory Audit $31.0\%$), we uphold 100% adherence to the challenge protocol without fabricating an unannounced "fresh test."
+By fully reporting this progression (Baseline $28.0\% \to$ Initial Check $32.3\% \to$ Confirmatory Audit $31.0\%$), we clearly disclose that `check_visits.csv` was evaluated during development and subsequent results on it in Run 011 are a confirmatory audit rather than a fresh independent test.
 
 ---
 
@@ -175,7 +175,7 @@ In Run 013 and [`app.py`](file:///c:/Users/Aryan%20Deo/Desktop/simco-intern-chal
   - **15 visits**: Caught extreme luxury or penny price extrapolation ($12.99\text{--}\$29.99$ and $\$0.29\text{--}\$1.29$).
   - **17 visits**: Caught uninformative equiprobable ties (identical $\$3.50$ pricing with zero discriminative brand loyalty).
   - **4 visits**: Caught mutually canceling psychological conflicts (pro-eco + green skeptic).
-- **Zero Hallucination**: The model refused to fabricate high confidence when empirical support was absent.
+- **Deterministic Abstention**: The model reliably triggered rule-based abstention rather than producing high-confidence estimates on ungrounded or out-of-distribution inputs.
 
 ---
 
@@ -196,11 +196,13 @@ In compliance with the Gravitas runtime (*"Report what actually happened, not wh
 
 ## 9. Trust Assessment: What the Data Can and Cannot Prove
 
-### What the Data CAN Tell You (High Trust):
-1. **Strong Downward Price Elasticity**: Empirical demand drops predictably from $33.8\%$ at $\$3.49$ to $19.9\%$ at $\$5.49$.
-2. **Catastrophic Churn from Product Failure**: Exactly $0$ of $11$ households repurchased after logging a stain complaint ($100\%$ empirical churn).
-3. **Online Environmental Synergy**: Online shoppers with stated eco-concerns exhibit a $+7.9\%$ market share lift when presented with the "environment" shelf message.
-4. **Holdout Generalization**: The model maintains a $+3.0\%$ accuracy lift and $1.6\%$ entrant calibration gap on completely unseen households.
+### Empirical Regularities Observed in Sample Data (Subject to Modeling Assumptions):
+1. **Downward Price Sensitivity**: Modeled entrant demand drops from $33.8\%$ at $\$3.49$ to $19.9\%$ at $\$5.49$ across simulation visits.
+2. **Severe Churn Association with Product Failure**: In observed visit history, $0$ of $11$ households repurchased entrant after logging a stain complaint.
+3. **Online Environmental Association**: In the sample, online visits from eco-conscious households show an empirical market share lift with the "environment" message.
+4. **Holdout Generalization**: The model maintains a $+3.0\%$ accuracy lift and $1.6\%$ entrant calibration gap on the 50 holdout households.
+
+> **Note on Causality**: Because the visit data reflects observational historical choices rather than a randomized controlled trial (A/B test), model parameters capture conditional statistical associations rather than proven counterfactual causal laws. Real-world consumer behavior may differ if exogenous conditions change.
 
 ### What the Data CANNOT Tell You (Trust Boundaries):
 1. **Competitor Retaliation**: The simulation assumes incumbent prices remain fixed at catalog levels ($\$3.99, \$2.99, \$4.29$). In reality, incumbents standard and budget may launch promotional discounts.
@@ -222,7 +224,7 @@ $$390 \times (\$4.49 - c) = 507 \times (\$3.49 - c)$$
 $$1,751.10 - 390 c = 1,769.43 - 507 c$$
 $$117 c = 18.33 \implies c^* = \$0.1567$$
 
-**Theorem**: For any unit cost (COGS + packaging + parcel shipping) exceeding **$0.15 / bottle**, pricing at **$4.49** generates strictly higher net profit than $3.49. Since producing and shipping a 16 fl oz liquid cleaner in the US costs substantially more than $\$0.16$, the $\$4.49$ price point strictly dominates.
+**Analytical Unit Margin Trade-Off**: Under static model-predicted market shares and constant unit cost assumptions, if unit cost (COGS + packaging + parcel delivery) exceeds **~$0.16 / bottle**, pricing at **$4.49** generates higher modeled net contribution margin than $3.49 in this simulation. This is not unconditional profit dominance: real-world competitor price reactions, promotional discounting, or differing customer acquisition costs across price tiers could alter the realized margin differential.
 
 ### Pre-Committed Falsification Gate
 - **Test**: Launch an initial 60-day commercial pilot of the eco-formulation online at $\$4.49$ with environmental messaging.

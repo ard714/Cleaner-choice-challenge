@@ -588,7 +588,7 @@ def main():
     print("  1. Out-of-sample log-loss improved by -0.00506 (from 1.5587 to 1.5537), confirming better probability calibration.")
     print("  2. Top-1 accuracy reached 32.50% (390/1200 visits, +2 visits over Run 007).")
     print("  3. CRITICAL HONESTY: With SE=0.00602 (t=0.28), the +2 visit accuracy lift is within stochastic noise bounds.")
-    print("     Discrete choice in 5 classes with Gumbel noise has an inherent theoretical ceiling (~34-36%).")
+    print("     Because choice behavior includes significant unobserved stochastic variation, accuracy gains plateau quickly.")
     print("  4. Overfitting was strictly averted: L2 regularization at 0.002 kept parameter inflation in check.")
 
     inputs_summary = (
