@@ -29,7 +29,19 @@ We will ask you to explain one saved run and a new household in a short live rev
 
 ## Start
 
-Use Python 3.10 or later. Run `python run_baseline.py` from this folder. The starter uses the Python standard library. It prints results for a build set and a check set.
+### Deliverable Quickstart (Single Command Local Run)
+To launch the interactive platform and open the browser interface locally with one command:
+```bash
+python run.py
+```
+*(Zero external pip dependencies required — uses only the Python standard library on laptop CPU).*
+
+To run individual reproducible benchmarks:
+- **Starter Baseline Benchmark**: `python run_baseline.py`
+- **Champion Choice Model Benchmark**: `python run_champion.py`
+- **Interactive Server Directly**: `python app.py`
+
+Use Python 3.10 or later. The starter uses the Python standard library. It prints results for a build set and a check set.
 
 `households.csv` holds answers from one survey before the visits. It includes income bands, budget pressure, and reported monthly spend on cleaning supplies.
 

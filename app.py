@@ -36,6 +36,7 @@ from runs.run_009 import (
     softmax,
     train_mle_fold,
 )
+from runs.run_013 import evaluate_trust_criteria
 
 DATA_DIR = ROOT_DIR / "data"
 DB_PATH = ROOT_DIR / "runs.db"
@@ -50,7 +51,12 @@ def init_app():
     global HOUSEHOLDS, BUILD_VISITS, CHAMPION_WEIGHTS
     print("Initializing Cleaner Choice Challenge Interactive Platform...")
     HOUSEHOLDS, BUILD_VISITS = load_data()
-    print(f"Loaded {len(HOUSEHOLDS)} households and {len(BUILD_VISITS)} visits.")
+    synth_path = DATA_DIR / "synthetic_households.csv"
+    if synth_path.exists():
+        with synth_path.open(newline="", encoding="utf-8") as f:
+            for r in csv.DictReader(f):
+                HOUSEHOLDS[r["household_id"]] = r
+    print(f"Loaded {len(HOUSEHOLDS)} households (including synthetic stress benchmarks) and {len(BUILD_VISITS)} visits.")
     print("Training champion 25-parameter choice model (v1.1-mle-refined)...")
     CHAMPION_WEIGHTS = train_mle_fold(BUILD_VISITS, HOUSEHOLDS, iterations=180, lr=0.08, l2_reg=0.002)
     print("Champion model trained successfully. Server ready.")
@@ -110,6 +116,7 @@ def run_prediction(payload: dict) -> dict:
 
     pred_choice = max(probs, key=probs.get)
     reasons = generate_grounded_reasons(pred_choice, probs, prod_feats, CHAMPION_WEIGHTS, raw_hh, offers)
+    trust_status, trust_warning, should_abstain = evaluate_trust_criteria(offers, raw_hh, probs, history)
 
     gross_rev_visit = entrant_p * probs["entrant"]
 
@@ -123,6 +130,9 @@ def run_prediction(payload: dict) -> dict:
         "pred_confidence": round(probs[pred_choice] * 100, 1),
         "grounded_reasons": reasons,
         "gross_rev_visit": round(gross_rev_visit, 2),
+        "trust_status": trust_status,
+        "trust_warning": trust_warning,
+        "should_abstain": should_abstain,
         "household_context": {
             "id": hh_id,
             "split": split_name,
@@ -284,6 +294,7 @@ def score_batch_csv(csv_content: str) -> dict:
             probs = softmax(scores)
             pred = max(probs, key=probs.get)
             reasons = generate_grounded_reasons(pred, probs, prod_feats, CHAMPION_WEIGHTS, hh, offers)
+            status, explanation, should_abstain = evaluate_trust_criteria(offers, hh, probs, hist)
 
             true_c = clean_r.get("choice", "").strip().lower()
             if true_c in PRODUCTS:
@@ -317,6 +328,9 @@ def score_batch_csv(csv_content: str) -> dict:
                 "true_choice": true_c if true_c in PRODUCTS else None,
                 "probabilities": {k: round(v, 4) for k, v in probs.items()},
                 "reasons": reasons,
+                "trust_status": status,
+                "trust_warning": explanation,
+                "should_abstain": should_abstain,
             })
 
         metrics = None
@@ -694,6 +708,9 @@ HTML_TEMPLATE = """<!DOCTYPE html>
               <option value="H001">H001 - Standard Loyalist (Retail Shopper)</option>
               <option value="H201">H201 - Holdout Check Shopper (Unseen: 'pay more if problem solved')</option>
               <option value="H215">H215 - Holdout Check Shopper (Unseen: budget constraint)</option>
+              <option value="H901_OOD_LUXURY">H901_OOD_LUXURY - Synthetic Stress (OOD Price Hazard)</option>
+              <option value="H903_NEUTRAL_TIE">H903_NEUTRAL_TIE - Synthetic Stress (Equiprobable Max Entropy)</option>
+              <option value="H905_CONTRADICTORY">H905_CONTRADICTORY - Synthetic Stress (Eco vs Skeptic Conflict)</option>
             </select>
           </div>
 
@@ -808,6 +825,8 @@ HTML_TEMPLATE = """<!DOCTYPE html>
               <div class="hh-item"><span class="hh-lbl">Usual Brand</span><span class="hh-val" id="hh-usual-display">standard</span></div>
             </div>
           </div>
+
+          <div id="trust-warning-box" style="display: none; background: rgba(245, 158, 11, 0.15); border: 1px solid #f59e0b; color: #fbbf24; padding: 0.75rem 1rem; border-radius: 8px; margin-bottom: 1rem; font-size: 0.85rem; line-height: 1.45;"></div>
 
           <div class="prediction-banner">
             <div>
@@ -1163,6 +1182,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
           <div style="display: flex; gap: 0.5rem; margin-bottom: 0.75rem; flex-wrap: wrap;">
             <button type="button" class="tab-btn active" style="font-size: 0.75rem; padding: 0.3rem 0.6rem;" onclick="loadDemoCSV('check_visits')">Load 50 Holdout Visits</button>
+            <button type="button" class="tab-btn" style="font-size: 0.75rem; padding: 0.3rem 0.6rem; background: rgba(245, 158, 11, 0.15); border: 1px solid #f59e0b; color: #fbbf24;" onclick="loadDemoCSV('synthetic_stress')">🧪 Load Synthetic Stress Dataset (50 Visits - Trust Test)</button>
             <button type="button" class="tab-btn" style="font-size: 0.75rem; padding: 0.3rem 0.6rem; background: rgba(255,255,255,0.05); color: var(--text);" onclick="loadDemoCSV('new_households')">Load New Households CSV</button>
             <label style="cursor: pointer; background: rgba(255,255,255,0.05); color: var(--text); padding: 0.3rem 0.6rem; border-radius: 7px; font-size: 0.75rem; font-weight: 600; display: inline-flex; align-items: center;">
               📁 Upload CSV File
@@ -1369,7 +1389,18 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       document.getElementById('hh-baths-display').innerText = ctx.bathrooms;
       document.getElementById('hh-usual-display').innerText = ctx.usual_brand;
 
-      document.getElementById('banner-choice').innerText = data.pred_choice;
+      const warnBox = document.getElementById('trust-warning-box');
+      if (data.should_abstain) {
+        warnBox.style.display = 'block';
+        warnBox.innerHTML = `<strong>⚠️ TRUST ABSTENTION: ${data.trust_status}</strong><div style="margin-top: 0.25rem; font-size: 0.82rem; color: #fef3c7;">${data.trust_warning}</div>`;
+        document.getElementById('banner-choice').innerText = "I DON'T KNOW";
+        document.getElementById('banner-choice').style.color = "#f59e0b";
+      } else {
+        warnBox.style.display = 'none';
+        document.getElementById('banner-choice').innerText = data.pred_choice.toUpperCase();
+        document.getElementById('banner-choice').style.color = "var(--primary)";
+      }
+
       document.getElementById('banner-conf').innerText = data.pred_confidence + '%';
       document.getElementById('banner-rev').innerText = '$' + data.gross_rev_visit.toFixed(2);
 
@@ -1688,6 +1719,15 @@ KEY METRICS:
         } catch (err) {
           console.error('Failed to load check_visits.csv', err);
         }
+      } else if (type === 'synthetic_stress') {
+        try {
+          const res = await fetch('/api/synthetic_visits/raw');
+          const text = await res.text();
+          document.getElementById('batch-csv-area').value = text;
+          submitBatchCSV();
+        } catch (err) {
+          console.error('Failed to load synthetic_stress_visits.csv', err);
+        }
       } else {
         document.getElementById('batch-csv-area').value = 
 `household_id,income_band,cleaning_spend_usd,budget,bathrooms,usual_brand,note
@@ -1804,16 +1844,19 @@ H904_NEW,over_100k,25,middle,3,standard,Three kids at home; tough grime and stai
         let rowsHtml = '';
         data.records.forEach(r => {
           const match = r.true_choice && (r.pred_choice.toLowerCase() === r.true_choice.toLowerCase());
+          const predPill = r.should_abstain
+            ? `<span class="tag" title="${r.trust_warning}" style="background: rgba(245, 158, 11, 0.2); border: 1px solid #f59e0b; color: #fbbf24; font-size: 0.7rem; font-weight: 700;">⚠️ I DON'T KNOW (${r.pred_choice.toUpperCase()})</span>`
+            : `<span class="tag ${r.pred_choice === 'entrant' ? 'tag-success' : 'tag-bench'}">${r.pred_choice.toUpperCase()}</span>`;
           rowsHtml += `
             <tr>
               <td>${r.visit_index}</td>
               <td><strong>${r.household_id}</strong></td>
               <td style="text-transform: capitalize;">${r.channel}</td>
               <td>$${r.entrant_price.toFixed(2)}</td>
-              <td><span class="tag ${r.pred_choice === 'entrant' ? 'tag-success' : 'tag-bench'}">${r.pred_choice.toUpperCase()}</span></td>
+              <td>${predPill}</td>
               <td>${r.true_choice ? `<span class="tag ${match ? 'tag-success' : 'tag-fail'}">${r.true_choice.toUpperCase()}</span>` : '<span style="color:var(--text-muted);">-</span>'}</td>
               <td><strong>${r.pred_confidence}%</strong></td>
-              <td style="color: var(--text-muted);">${r.reasons[0] || 'N/A'}</td>
+              <td style="color: var(--text-muted);">${r.should_abstain ? `<span style="color: #fbbf24; font-weight: 600;">[Trust Warning]</span> ${r.trust_warning}` : (r.reasons[0] || 'N/A')}</td>
             </tr>
           `;
         });
@@ -1863,6 +1906,14 @@ class RequestHandler(BaseHTTPRequestHandler):
         elif parsed.path == "/api/check_visits/raw":
             check_path = DATA_DIR / "check_visits.csv"
             with open(check_path, "r", encoding="utf-8") as f:
+                content = f.read()
+            self.send_response(200)
+            self.send_header("Content-Type", "text/plain; charset=utf-8")
+            self.end_headers()
+            self.wfile.write(content.encode("utf-8"))
+        elif parsed.path == "/api/synthetic_visits/raw":
+            synth_path = DATA_DIR / "synthetic_stress_visits.csv"
+            with open(synth_path, "r", encoding="utf-8") as f:
                 content = f.read()
             self.send_response(200)
             self.send_header("Content-Type", "text/plain; charset=utf-8")

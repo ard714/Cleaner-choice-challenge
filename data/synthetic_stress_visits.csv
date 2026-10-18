@@ -1,0 +1,51 @@
+visit_id,household_id,visit_number,channel,entrant_price,entrant_message,standard_price,budget_price,scented_price,choice,said_why,after_use_note
+V901-1,H901_OOD_LUXURY,1,online,12.99,environment,3.99,2.99,4.29,standard,Price was excessively high.,
+V901-2,H901_OOD_LUXURY,2,online,16.49,environment,3.99,2.99,4.29,standard,Price was excessively high.,
+V901-3,H901_OOD_LUXURY,3,online,19.99,environment,3.99,2.99,4.29,standard,Price was excessively high.,
+V901-4,H901_OOD_LUXURY,4,online,24.99,environment,3.99,2.99,4.29,standard,Price was excessively high.,
+V901-5,H901_OOD_LUXURY,5,online,29.99,environment,3.99,2.99,4.29,standard,Price was excessively high.,
+V902-1,H902_OOD_SUBSIDIZED,1,retail,0.29,cleaning,3.99,2.99,4.29,entrant,Unrealistically cheap price.,
+V902-2,H902_OOD_SUBSIDIZED,2,retail,0.49,cleaning,3.99,2.99,4.29,entrant,Unrealistically cheap price.,
+V902-3,H902_OOD_SUBSIDIZED,3,retail,0.79,cleaning,3.99,2.99,4.29,entrant,Unrealistically cheap price.,
+V902-4,H902_OOD_SUBSIDIZED,4,retail,0.99,cleaning,3.99,2.99,4.29,entrant,Unrealistically cheap price.,
+V902-5,H902_OOD_SUBSIDIZED,5,retail,1.29,cleaning,3.99,2.99,4.29,entrant,Unrealistically cheap price.,
+V903-1,H903_NEUTRAL_TIE,1,retail,3.50,,3.50,3.50,3.50,none,Indifferent between all four brands.,
+V903-2,H903_NEUTRAL_TIE,2,retail,3.50,,3.50,3.50,3.50,none,Indifferent between all four brands.,
+V903-3,H903_NEUTRAL_TIE,3,online,3.50,,3.50,3.50,3.50,none,Indifferent between all four brands.,
+V903-4,H903_NEUTRAL_TIE,4,online,3.50,,3.50,3.50,3.50,none,Indifferent between all four brands.,
+V903-5,H903_NEUTRAL_TIE,5,retail,3.50,,3.50,3.50,3.50,none,Indifferent between all four brands.,
+V904-1,H904_INDIFFERENT_TIED,1,online,3.99,,3.99,3.99,3.99,budget,No preference.,
+V904-2,H904_INDIFFERENT_TIED,2,online,3.99,,3.99,3.99,3.99,budget,No preference.,
+V904-3,H904_INDIFFERENT_TIED,3,online,3.99,,3.99,3.99,3.99,budget,No preference.,
+V904-4,H904_INDIFFERENT_TIED,4,online,3.99,,3.99,3.99,3.99,budget,No preference.,
+V904-5,H904_INDIFFERENT_TIED,5,online,3.99,,3.99,3.99,3.99,budget,No preference.,
+V905-1,H905_CONTRADICTORY,1,online,4.49,environment,3.99,2.99,4.29,standard,Distrusted claims.,
+V905-2,H905_CONTRADICTORY,2,online,4.49,cleaning,3.99,2.99,4.29,standard,Distrusted claims.,
+V905-3,H905_CONTRADICTORY,3,online,4.49,low_odor,3.99,2.99,4.29,standard,Distrusted claims.,
+V905-4,H905_CONTRADICTORY,4,online,4.49,environment,3.99,2.99,4.29,standard,Distrusted claims.,
+V905-5,H905_CONTRADICTORY,5,online,4.49,cleaning,3.99,2.99,4.29,standard,Distrusted claims.,
+V906-1,H906_FEEDBACK_CHAOS,1,retail,4.49,low_odor,3.99,2.99,4.29,entrant,Conflicted feedback testing.,It left a stain behind
+V906-2,H906_FEEDBACK_CHAOS,2,retail,4.49,low_odor,3.99,2.99,4.29,entrant,Conflicted feedback testing.,It removed the stain I noticed
+V906-3,H906_FEEDBACK_CHAOS,3,retail,4.49,low_odor,3.99,2.99,4.29,standard,Conflicted feedback testing.,The smell lasted too long
+V906-4,H906_FEEDBACK_CHAOS,4,retail,4.49,low_odor,3.99,2.99,4.29,scented,Conflicted feedback testing.,It left a stain behind
+V906-5,H906_FEEDBACK_CHAOS,5,retail,4.49,low_odor,3.99,2.99,4.29,budget,Conflicted feedback testing.,Easy to use bottle
+V907-1,H907_TOTAL_BLANK,1,retail,4.49,,3.99,2.99,4.29,standard,,
+V907-2,H907_TOTAL_BLANK,2,retail,4.49,,3.99,2.99,4.29,standard,,
+V907-3,H907_TOTAL_BLANK,3,retail,4.49,,3.99,2.99,4.29,standard,,
+V907-4,H907_TOTAL_BLANK,4,retail,4.49,,3.99,2.99,4.29,standard,,
+V907-5,H907_TOTAL_BLANK,5,retail,4.49,,3.99,2.99,4.29,standard,,
+V908-1,H908_UNSEEN_ANOMALY,1,online,9.99,super_cleaner,9.99,2.99,4.29,none,Price anomaly.,
+V908-2,H908_UNSEEN_ANOMALY,2,online,0.10,super_cleaner,0.50,2.99,4.29,none,Price anomaly.,
+V908-3,H908_UNSEEN_ANOMALY,3,online,15.00,super_cleaner,3.99,2.99,4.29,none,Price anomaly.,
+V908-4,H908_UNSEEN_ANOMALY,4,online,4.49,super_cleaner,12.00,2.99,4.29,none,Price anomaly.,
+V908-5,H908_UNSEEN_ANOMALY,5,online,22.50,super_cleaner,22.50,2.99,4.29,none,Price anomaly.,
+V909-1,H909_EXTREME_STAIN_CHURN,1,online,4.49,cleaning,3.99,2.99,4.29,entrant,Multiple brand failures.,It left a stain behind
+V909-2,H909_EXTREME_STAIN_CHURN,2,online,4.49,cleaning,3.99,2.99,4.29,standard,Multiple brand failures.,It left a stain behind
+V909-3,H909_EXTREME_STAIN_CHURN,3,online,4.49,cleaning,3.99,2.99,4.29,budget,Multiple brand failures.,It left a stain behind
+V909-4,H909_EXTREME_STAIN_CHURN,4,online,4.49,cleaning,3.99,2.99,4.29,scented,Multiple brand failures.,It left a stain behind
+V909-5,H909_EXTREME_STAIN_CHURN,5,online,4.49,cleaning,3.99,2.99,4.29,none,Multiple brand failures.,
+V910-1,H910_ZERO_NEED_SKIP,1,retail,5.49,environment,4.49,3.49,4.89,none,Zero need.,
+V910-2,H910_ZERO_NEED_SKIP,2,retail,5.49,environment,4.49,3.49,4.89,none,Zero need.,
+V910-3,H910_ZERO_NEED_SKIP,3,retail,5.49,environment,4.49,3.49,4.89,none,Zero need.,
+V910-4,H910_ZERO_NEED_SKIP,4,retail,5.49,environment,4.49,3.49,4.89,none,Zero need.,
+V910-5,H910_ZERO_NEED_SKIP,5,retail,5.49,environment,4.49,3.49,4.89,none,Zero need.,

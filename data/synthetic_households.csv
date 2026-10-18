@@ -1,0 +1,11 @@
+household_id,income_band,cleaning_spend_usd,budget,bathrooms,usual_brand,note
+H901_OOD_LUXURY,over_100k,150,generous,4,standard,I only purchase ultra-luxury artisanal imported cleaners.
+H902_OOD_SUBSIDIZED,under_50k,2,tight,1,budget,Looking for government subsidized surplus supplies.
+H903_NEUTRAL_TIE,50k_to_100k,15,middle,1,,I have no preference and pick whatever bottle my hand touches first.
+H904_INDIFFERENT_TIED,50k_to_100k,15,middle,2,,
+H905_CONTRADICTORY,50k_to_100k,20,middle,2,entrant,I worry about cleaners that go down the drain. I do not trust green claims.
+H906_FEEDBACK_CHAOS,50k_to_100k,25,flexible,2,standard,I like a fresh scent but hate perfumes and sharp chemical smells.
+H907_TOTAL_BLANK,,,,,,
+H908_UNSEEN_ANOMALY,unspecified,-10,infinite,0,alien_cleaner,1234567890 !@#$%^&*()
+H909_EXTREME_STAIN_CHURN,over_100k,40,flexible,3,entrant,I tried entrant and standard and budget.
+H910_ZERO_NEED_SKIP,over_100k,5,generous,1,standard,I only clean once a year.
