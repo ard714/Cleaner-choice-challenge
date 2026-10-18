@@ -4,13 +4,22 @@ A quick reference guide for evaluating, demonstrating, and testing the SimCo Cle
 
 ---
 
-## 1. Quick Launch (Single Command)
+## 1. Quick Launch Options
 
+### Option A: Cloud Live Demo (Instant Access)
+Visit the deployed live application directly in your browser:
+🔗 **[https://cleaner-choice-challenge.onrender.com/](https://cleaner-choice-challenge.onrender.com/)**
+
+> ⚠️ **Cloud Free Tier Notice (Cold Start Warning):** The live application is hosted on Render's free tier. If the instance has been inactive for more than 15 minutes, Render automatically spins down the container to conserve compute resources. On the very first visit after a period of dormancy, the page may take **30 to 50 seconds** to wake up. Once warm, all tab navigations, what-if sliders, live CSV scoring, and counterfactual simulations run instantaneously (<50ms).
+
+---
+
+### Option B: Local Single-Command Run
 From the project root directory, run:
 ```bash
 python run.py
 ```
-*(Or run `run.bat` on Windows / `./run.sh` on macOS/Linux).*
+*(Or double-click `run.bat` on Windows / execute `./run.sh` on macOS/Linux).*
 
 The launcher automatically audits datasets, executes mathematical sanity tests, starts the local HTTP server, and opens your default browser at:
 ```
