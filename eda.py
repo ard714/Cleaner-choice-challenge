@@ -120,6 +120,48 @@ def show_behavioral_insights(visits: list[dict], check_visits: list[dict], house
     print()
 
 
+def show_discrete_review_taxonomy(visits: list[dict], check_visits: list[dict], households: dict):
+    print("=" * 60)
+    print("Discrete Review & Note Taxonomy Analysis (Finite Vocabularies)")
+    print("=" * 60)
+
+    # Combine both datasets to verify dictionary completeness
+    all_visits = visits + check_visits
+    aun_counts = Counter(v["after_use_note"] for v in all_visits if v.get("after_use_note"))
+    sw_counts = Counter(v["said_why"] for v in all_visits if v.get("said_why"))
+
+    print(f"\n1. after_use_note: Exactly {len(aun_counts)} Discrete Canned Strings across all datasets:")
+    categories = {
+        "Efficacy / Stain": ["It removed the stain I noticed.", "It left a stain behind."],
+        "Odor / Scent": ["The smell was easy to live with.", "The smell lasted too long."],
+        "Ergonomics / Packaging": ["The bottle was easy to use.", "The bottle was hard to use."],
+    }
+    for cat, phrases in categories.items():
+        print(f"  [{cat}]")
+        for p in phrases:
+            print(f"    • '{p}': {aun_counts.get(p, 0)} occurrences")
+
+    print(f"\n2. said_why: Exactly {len(sw_counts)} Discrete Purchase Rationale Strings:")
+    sw_taxonomy = {
+        "Habit / Loyalty": ["I bought the cleaner I often buy.", "I know this brand.", "I know this cleaner."],
+        "Price & Budget": ["I did not see a reason to pay more.", "The price fit my budget.", "The price seemed fair."],
+        "Environmental Value": ["I thought it would make less waste.", "I wanted a refillable bottle."],
+        "Efficacy Expectation": ["I expected it to clean tough stains.", "I thought it would clean well."],
+        "Scent Preference": ["I wanted less smell.", "I wanted the fresh scent."],
+        "Inventory / Need State": ["I did not need cleaner today.", "I still had cleaner at home.", "I left without buying one."],
+        "Trial & Novelty": ["I wanted to try a new cleaner."],
+    }
+    for cat, phrases in sw_taxonomy.items():
+        print(f"  [{cat}]")
+        for p in phrases:
+            print(f"    • '{p}': {sw_counts.get(p, 0)} occurrences")
+
+    print(f"\n3. household survey notes: 45 Permutations of 5 Opening + 9 Concern Sentences:")
+    print("  Opening sentences (Shopping behavior): 'I buy supplies during one weekly trip', 'I usually buy the same cleaner', etc.")
+    print("  Concern sentences (Specific priorities): 'I worry about cleaners that go down the drain', 'A refill pack leaked', etc.")
+    print()
+
+
 def main():
     products = load_csv("products.csv")
     households = {r["household_id"]: r for r in load_csv("households.csv")}
@@ -132,6 +174,7 @@ def main():
     summarize_table("check_visits.csv", check_visits)
 
     show_behavioral_insights(visits, check_visits, households)
+    show_discrete_review_taxonomy(visits, check_visits, households)
 
 
 if __name__ == "__main__":

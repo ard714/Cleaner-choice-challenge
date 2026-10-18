@@ -13,12 +13,20 @@ Uses only Python standard library.
 """
 
 import csv
+import sys
 from math import exp
 from pathlib import Path
+
+# Add project root to path for imports
+ROOT_DIR = Path(__file__).resolve().parent.parent
+if str(ROOT_DIR) not in sys.path:
+    sys.path.insert(0, str(ROOT_DIR))
+
 from evaluator import group_k_fold_households, run_sequential_evaluation
 from tracker import log_run, show_run_details
 
-DATA_DIR = Path(__file__).parent / "data"
+DATA_DIR = ROOT_DIR / "data"
+DB_PATH = ROOT_DIR / "runs.db"
 
 
 def load_data():
@@ -30,7 +38,6 @@ def load_data():
 
 
 def make_predict_fn(none_buffer: float):
-    """Factory creating baseline predict function with configurable none_buffer."""
     def predict(household, offers, visit, history):
         scores = {"none": 0.2 + (none_buffer if history and history[-1]["choice"] != "none" else 0)}
         reasons = {"none": "The model expects no purchase on this visit."}
@@ -71,7 +78,6 @@ def make_predict_fn(none_buffer: float):
 
 
 def evaluate_variant(predict_fn, visits, households, folds):
-    """Run 5-fold CV and compute mean metrics."""
     fold_metrics = []
     for train_hids, val_hids in folds:
         m, _ = run_sequential_evaluation(predict_fn, visits, households, allowed_household_ids=val_hids)
@@ -84,7 +90,6 @@ def evaluate_variant(predict_fn, visits, households, folds):
     mean_obs_ent = sum(f["entrant_observed"] for f in fold_metrics) / n
     mean_exp_ent = sum(f["entrant_expected"] for f in fold_metrics) / n
 
-    # Also compute none-class predicted share
     none_preds = sum(f["choice_predicted"].get("none", 0) for f in fold_metrics)
     total_samples = sum(f["total_samples"] for f in fold_metrics)
     none_pred_rate = none_preds / total_samples
@@ -165,7 +170,6 @@ def main():
         f"Model C (+0.05): CV Acc={res_c['accuracy']*100:.1f}%, LogLoss={res_c['log_loss']:.4f}, Pred None={res_c['none_predicted_rate']*100:.1f}%."
     )
 
-    # Learning notes
     if res_b["log_loss"] > res_a["log_loss"]:
         buffer_verdict = (
             f"Completely removing the buffer (0.00) slightly degrades LogLoss from {res_a['log_loss']:.4f} to {res_b['log_loss']:.4f}, "
@@ -200,11 +204,12 @@ def main():
         entrant_observed_build=res_b["entrant_observed"],
         entrant_expected_build=res_b["entrant_expected"],
         notes=notes,
+        db_path=DB_PATH,
     )
 
     print("\n" + "=" * 80)
     print("RECORDED TO runs.db:")
-    show_run_details(run_id)
+    show_run_details(run_id, db_path=DB_PATH)
 
 
 if __name__ == "__main__":

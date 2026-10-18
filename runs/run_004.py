@@ -12,12 +12,20 @@ Uses only Python standard library.
 """
 
 import csv
+import sys
 from math import exp
 from pathlib import Path
+
+# Add project root to path for imports
+ROOT_DIR = Path(__file__).resolve().parent.parent
+if str(ROOT_DIR) not in sys.path:
+    sys.path.insert(0, str(ROOT_DIR))
+
 from evaluator import group_k_fold_households, run_sequential_evaluation
 from tracker import log_run, show_run_details
 
-DATA_DIR = Path(__file__).parent / "data"
+DATA_DIR = ROOT_DIR / "data"
+DB_PATH = ROOT_DIR / "runs.db"
 
 
 def load_data():
@@ -29,7 +37,6 @@ def load_data():
 
 
 def predict_baseline(household, offers, visit, history):
-    """Untouched starter baseline."""
     scores = {"none": 0.2 + (0.35 if history and history[-1]["choice"] != "none" else 0)}
     reasons = {"none": "The model expects no purchase on this visit."}
 
@@ -67,10 +74,6 @@ def predict_baseline(household, offers, visit, history):
 
 
 def predict_improved_ascs(household, offers, visit, history):
-    """Model with calibrated product-specific intercepts and rebalanced none base."""
-    # Calibrated base intercepts:
-    # Entrant ($4.45) receives higher base utility to offset its price disadvantage.
-    # None is rebalanced to enable non-purchase detection.
     ascs = {
         "entrant": 2.75,
         "standard": 2.40,
@@ -79,7 +82,6 @@ def predict_improved_ascs(household, offers, visit, history):
         "none": 0.70,
     }
 
-    # Restock buffer: tuned down from +0.35 to +0.10 based on Run 003
     scores = {"none": ascs["none"] + (0.10 if history and history[-1]["choice"] != "none" else 0)}
     reasons = {"none": "Household restock urgency baseline."}
 
@@ -180,10 +182,7 @@ def main():
     visit_hh_ids = sorted(list(set(v["household_id"] for v in visits)))
     folds = group_k_fold_households(visit_hh_ids, n_splits=5, seed=42)
 
-    # 1. Baseline Benchmark
     res_base = evaluate_on_folds(predict_baseline, visits, households, folds)
-
-    # 2. Improved ASC Model
     res_impr = evaluate_on_folds(predict_improved_ascs, visits, households, folds)
 
     print(f"{'Metric':<28} | {'Baseline (Run 002)':<20} | {'Improved Model (Run 004)':<24} | Delta")
@@ -232,11 +231,12 @@ def main():
         entrant_observed_build=res_impr["entrant_observed"],
         entrant_expected_build=res_impr["entrant_expected"],
         notes=notes,
+        db_path=DB_PATH,
     )
 
     print("\n" + "=" * 85)
     print("RECORDED TO runs.db:")
-    show_run_details(run_id)
+    show_run_details(run_id, db_path=DB_PATH)
 
 
 if __name__ == "__main__":

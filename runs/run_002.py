@@ -6,13 +6,20 @@ Uses only Python standard library.
 """
 
 import csv
-from collections import defaultdict
+import sys
 from pathlib import Path
+
+# Add project root to path for imports
+ROOT_DIR = Path(__file__).resolve().parent.parent
+if str(ROOT_DIR) not in sys.path:
+    sys.path.insert(0, str(ROOT_DIR))
+
 import baseline
 from evaluator import group_k_fold_households, run_sequential_evaluation
 from tracker import log_run, show_run_details
 
-DATA_DIR = Path(__file__).parent / "data"
+DATA_DIR = ROOT_DIR / "data"
+DB_PATH = ROOT_DIR / "runs.db"
 
 
 def load_data():
@@ -88,7 +95,6 @@ def main():
     mean_exp_ent = sum(f["entrant_expected"] for f in fold_results) / n_folds
     cal_gap = abs(mean_exp_ent - mean_obs_ent)
 
-    # Variance across folds
     acc_std = (sum((f["accuracy"] - mean_acc) ** 2 for f in fold_results) / n_folds) ** 0.5
 
     outputs_summary = (
@@ -121,11 +127,12 @@ def main():
         entrant_observed_build=mean_obs_ent,
         entrant_expected_build=mean_exp_ent,
         notes=notes,
+        db_path=DB_PATH,
     )
 
     print("\n" + "=" * 75)
     print("RECORDED TO runs.db:")
-    show_run_details(run_id)
+    show_run_details(run_id, db_path=DB_PATH)
 
 
 if __name__ == "__main__":
