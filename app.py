@@ -75,9 +75,13 @@ def run_prediction(payload: dict) -> dict:
     if "budget" in payload and payload["budget"]:
         raw_hh["budget"] = payload["budget"]
     if "bathrooms" in payload and payload["bathrooms"]:
-        raw_hh["bathrooms"] = payload["bathrooms"]
+        raw_hh["bathrooms"] = str(payload["bathrooms"])
     if "usual_brand" in payload and payload["usual_brand"]:
         raw_hh["usual_brand"] = payload["usual_brand"]
+    if "cleaning_spend_usd" in payload and payload["cleaning_spend_usd"]:
+        raw_hh["cleaning_spend_usd"] = str(payload["cleaning_spend_usd"])
+    if "note" in payload and payload["note"] is not None:
+        raw_hh["note"] = payload["note"]
 
     entrant_p = float(payload.get("entrant_price", 4.49))
     entrant_msg = payload.get("entrant_message", "environment")
@@ -108,6 +112,9 @@ def run_prediction(payload: dict) -> dict:
 
     gross_rev_visit = entrant_p * probs["entrant"]
 
+    hh_num = int(hh_id[1:]) if (hh_id.startswith("H") and hh_id[1:].isdigit()) else 0
+    split_name = "Holdout Check Split (Unseen)" if hh_num > 200 else ("Build Split" if hh_num > 0 else "Custom Archetype")
+
     return {
         "probabilities": {k: round(v, 4) for k, v in probs.items()},
         "scores": {k: round(v, 3) for k, v in scores.items()},
@@ -117,11 +124,13 @@ def run_prediction(payload: dict) -> dict:
         "gross_rev_visit": round(gross_rev_visit, 2),
         "household_context": {
             "id": hh_id,
-            "income_band": raw_hh.get("income_band"),
-            "budget": raw_hh.get("budget"),
-            "bathrooms": raw_hh.get("bathrooms"),
-            "usual_brand": raw_hh.get("usual_brand"),
-            "survey_note": raw_hh.get("note"),
+            "split": split_name,
+            "income_band": raw_hh.get("income_band", "50k_to_100k"),
+            "budget": raw_hh.get("budget", "middle"),
+            "bathrooms": str(raw_hh.get("bathrooms", "1")),
+            "usual_brand": raw_hh.get("usual_brand", "standard"),
+            "cleaning_spend_usd": str(raw_hh.get("cleaning_spend_usd", "15")),
+            "survey_note": raw_hh.get("note", "") or "(No free-text survey response provided)",
         },
     }
 
@@ -360,6 +369,55 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     .tag-success { background: rgba(16, 185, 129, 0.2); color: #34d399; }
     .tag-fail { background: rgba(244, 63, 94, 0.2); color: #fb7185; }
     .tag-bench { background: rgba(59, 130, 246, 0.2); color: #60a5fa; }
+    .tag-purple { background: rgba(139, 92, 246, 0.2); color: #c084fc; }
+    .tag-amber { background: rgba(245, 158, 11, 0.2); color: #fbbf24; }
+
+    .hh-card {
+      background: rgba(15, 23, 42, 0.7);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 1.1rem;
+      margin-bottom: 1.25rem;
+    }
+    .hh-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.6rem;
+    }
+    .hh-quote {
+      font-style: italic;
+      color: #cbd5e1;
+      font-size: 0.85rem;
+      border-left: 2px solid var(--accent-blue);
+      padding-left: 0.75rem;
+      margin-bottom: 0.75rem;
+      line-height: 1.4;
+    }
+    .hh-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0.5rem;
+      font-size: 0.75rem;
+    }
+    .hh-item {
+      background: rgba(255, 255, 255, 0.03);
+      padding: 0.45rem 0.6rem;
+      border-radius: 6px;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    .hh-lbl {
+      color: var(--text-muted);
+      text-transform: uppercase;
+      font-size: 0.65rem;
+      font-weight: 700;
+      display: block;
+      margin-bottom: 0.15rem;
+    }
+    .hh-val {
+      font-weight: 600;
+      color: #fff;
+    }
 
     table {
       width: 100%;
@@ -408,14 +466,71 @@ HTML_TEMPLATE = """<!DOCTYPE html>
           <div class="card-title">Launch Scenario Controls</div>
 
           <div class="form-group">
-            <label>Select Household Archetype</label>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4rem;">
+              <label style="margin-bottom: 0;">Select Household</label>
+              <button type="button" onclick="toggleCustomOverrides()" style="background: none; border: none; color: var(--accent-blue); font-size: 0.75rem; cursor: pointer; text-decoration: underline;">
+                ⚙️ Custom Demographic Overrides
+              </button>
+            </div>
             <select id="hh-select" onchange="loadHouseholdContext()">
-              <option value="H004">H004 - Affluent Eco-Conscious (&gt; $100k, 'fewer plastic bottles')</option>
+              <option value="H004">H004 - Affluent Eco-Conscious (> $100k, 'fewer plastic bottles')</option>
               <option value="H013">H013 - Tight Budget Price-Sensitive ('tight', refill leak)</option>
               <option value="H014">H014 - Large Home (3 Bathrooms, heavy supply velocity)</option>
               <option value="H015">H015 - Green Skeptic ('do not trust green claims')</option>
               <option value="H001">H001 - Standard Loyalist (Retail Shopper)</option>
+              <option value="H201">H201 - Holdout Check Shopper (Unseen: 'pay more if problem solved')</option>
+              <option value="H215">H215 - Holdout Check Shopper (Unseen: budget constraint)</option>
             </select>
+          </div>
+
+          <!-- Collapsible Custom Overrides -->
+          <div id="custom-override-panel" style="display: none; background: rgba(15, 23, 42, 0.85); border: 1px solid rgba(59, 130, 246, 0.3); border-radius: 8px; padding: 0.85rem; margin-bottom: 1.1rem;">
+            <div style="font-size: 0.75rem; font-weight: 700; color: var(--accent-blue); text-transform: uppercase; margin-bottom: 0.5rem;">Test Custom / Hypothetical Household</div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; margin-bottom: 0.5rem;">
+              <div>
+                <label style="font-size: 0.7rem; color: var(--text-muted); display: block;">Income Band</label>
+                <select id="ov-income" onchange="runSim()" style="padding: 0.4rem; font-size: 0.8rem;">
+                  <option value="">Default (From Survey)</option>
+                  <option value="under_50k">under_50k</option>
+                  <option value="50k_to_100k">50k_to_100k</option>
+                  <option value="over_100k">over_100k</option>
+                </select>
+              </div>
+              <div>
+                <label style="font-size: 0.7rem; color: var(--text-muted); display: block;">Budget Pressure</label>
+                <select id="ov-budget" onchange="runSim()" style="padding: 0.4rem; font-size: 0.8rem;">
+                  <option value="">Default (From Survey)</option>
+                  <option value="tight">tight</option>
+                  <option value="middle">middle</option>
+                  <option value="generous">generous</option>
+                </select>
+              </div>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; margin-bottom: 0.5rem;">
+              <div>
+                <label style="font-size: 0.7rem; color: var(--text-muted); display: block;">Bathrooms</label>
+                <select id="ov-baths" onchange="runSim()" style="padding: 0.4rem; font-size: 0.8rem;">
+                  <option value="">Default (From Survey)</option>
+                  <option value="1">1 Bathroom</option>
+                  <option value="2">2 Bathrooms</option>
+                  <option value="3">3+ Bathrooms</option>
+                </select>
+              </div>
+              <div>
+                <label style="font-size: 0.7rem; color: var(--text-muted); display: block;">Usual Brand</label>
+                <select id="ov-brand" onchange="runSim()" style="padding: 0.4rem; font-size: 0.8rem;">
+                  <option value="">Default (From Survey)</option>
+                  <option value="standard">standard</option>
+                  <option value="budget">budget</option>
+                  <option value="scented">scented</option>
+                  <option value="entrant">entrant</option>
+                </select>
+              </div>
+            </div>
+            <div>
+              <label style="font-size: 0.7rem; color: var(--text-muted); display: block;">Hypothetical Survey Note</label>
+              <input type="text" id="ov-note" placeholder="e.g. I try to buy eco friendly products..." oninput="runSim()" style="padding: 0.4rem; font-size: 0.8rem;">
+            </div>
           </div>
 
           <div class="form-group">
@@ -462,6 +577,24 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
         <!-- Real-Time Output Column -->
         <div>
+          <!-- Real-Time Household Profile Display -->
+          <div class="hh-card" id="hh-profile-card">
+            <div class="hh-header">
+              <div>
+                <strong id="hh-id-display" style="font-size: 1.05rem; color: #fff;">H004</strong>
+                <span id="hh-split-badge" class="tag tag-bench" style="margin-left: 0.5rem;">Build Split</span>
+              </div>
+              <span id="hh-spend-display" style="font-size: 0.8rem; color: var(--text-muted);">$15 / mo cleaning</span>
+            </div>
+            <div class="hh-quote" id="hh-quote-display">"I try to use fewer plastic bottles..."</div>
+            <div class="hh-grid">
+              <div class="hh-item"><span class="hh-lbl">Income</span><span class="hh-val" id="hh-income-display">over_100k</span></div>
+              <div class="hh-item"><span class="hh-lbl">Budget</span><span class="hh-val" id="hh-budget-display">generous</span></div>
+              <div class="hh-item"><span class="hh-lbl">Baths</span><span class="hh-val" id="hh-baths-display">2</span></div>
+              <div class="hh-item"><span class="hh-lbl">Usual Brand</span><span class="hh-val" id="hh-usual-display">standard</span></div>
+            </div>
+          </div>
+
           <div class="prediction-banner">
             <div>
               <div style="font-size: 0.8rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700;">Simulated Consumer Choice</div>
@@ -578,8 +711,80 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       runSim();
     }
 
+    let allHouseholds = {};
+
+    function toggleCustomOverrides() {
+      const p = document.getElementById('custom-override-panel');
+      p.style.display = p.style.display === 'none' ? 'block' : 'none';
+    }
+
     function loadHouseholdContext() {
+      // Clear custom overrides when switching household
+      document.getElementById('ov-income').value = '';
+      document.getElementById('ov-budget').value = '';
+      document.getElementById('ov-baths').value = '';
+      document.getElementById('ov-brand').value = '';
+      document.getElementById('ov-note').value = '';
       runSim();
+    }
+
+    async function initHouseholds() {
+      try {
+        const res = await fetch('/api/households');
+        allHouseholds = await res.json();
+        const sel = document.getElementById('hh-select');
+        const curVal = sel.value || 'H004';
+        sel.innerHTML = '';
+
+        const archetypes = [
+          { id: 'H004', label: "H004 - Affluent Eco-Conscious (> $100k, 'fewer plastic bottles')" },
+          { id: 'H013', label: "H013 - Tight Budget Price-Sensitive ('tight', refill leak)" },
+          { id: 'H014', label: "H014 - Large Home (3 Bathrooms, heavy supply velocity)" },
+          { id: 'H015', label: "H015 - Green Skeptic ('do not trust green claims')" },
+          { id: 'H001', label: "H001 - Standard Loyalist (Retail Shopper)" }
+        ];
+
+        const grpArch = document.createElement('optgroup');
+        grpArch.label = '⭐ Featured Household Archetypes';
+        archetypes.forEach(a => {
+          const opt = document.createElement('option');
+          opt.value = a.id;
+          opt.innerText = a.label;
+          grpArch.appendChild(opt);
+        });
+        sel.appendChild(grpArch);
+
+        const grpBuild = document.createElement('optgroup');
+        grpBuild.label = '📁 Build Split (H001 - H200)';
+        for (let i = 1; i <= 200; i++) {
+          const hid = 'H' + String(i).padStart(3, '0');
+          if (allHouseholds[hid]) {
+            const h = allHouseholds[hid];
+            const opt = document.createElement('option');
+            opt.value = hid;
+            opt.innerText = `${hid} [${h.income_band}, ${h.budget}, ${h.bathrooms}b, ${h.usual_brand}]`;
+            grpBuild.appendChild(opt);
+          }
+        }
+        sel.appendChild(grpBuild);
+
+        const grpCheck = document.createElement('optgroup');
+        grpCheck.label = '🔒 Holdout Check Split (H201 - H250 Unseen)';
+        for (let i = 201; i <= 250; i++) {
+          const hid = 'H' + String(i).padStart(3, '0');
+          if (allHouseholds[hid]) {
+            const h = allHouseholds[hid];
+            const opt = document.createElement('option');
+            opt.value = hid;
+            opt.innerText = `${hid} [${h.income_band}, ${h.budget}, ${h.bathrooms}b, ${h.usual_brand}]`;
+            grpCheck.appendChild(opt);
+          }
+        }
+        sel.appendChild(grpCheck);
+        sel.value = curVal;
+      } catch (e) {
+        console.error('Failed loading households', e);
+      }
     }
 
     async function runSim() {
@@ -590,7 +795,12 @@ HTML_TEMPLATE = """<!DOCTYPE html>
         entrant_message: document.getElementById('message-select').value,
         had_prior_purchase: document.getElementById('toggle-restock').checked,
         had_stain_failure: document.getElementById('toggle-stain').checked,
-        had_positive_exp: document.getElementById('toggle-pos').checked
+        had_positive_exp: document.getElementById('toggle-pos').checked,
+        income_band: document.getElementById('ov-income').value,
+        budget: document.getElementById('ov-budget').value,
+        bathrooms: document.getElementById('ov-baths').value,
+        usual_brand: document.getElementById('ov-brand').value,
+        note: document.getElementById('ov-note').value || undefined
       };
 
       const res = await fetch('/api/predict', {
@@ -599,6 +809,18 @@ HTML_TEMPLATE = """<!DOCTYPE html>
         body: JSON.stringify(payload)
       });
       const data = await res.json();
+
+      // Update Household Profile Card
+      const ctx = data.household_context;
+      document.getElementById('hh-id-display').innerText = ctx.id;
+      document.getElementById('hh-split-badge').innerText = ctx.split;
+      document.getElementById('hh-split-badge').className = 'tag ' + (ctx.split.includes('Holdout') ? 'tag-purple' : 'tag-bench');
+      document.getElementById('hh-spend-display').innerText = '$' + ctx.cleaning_spend_usd + ' / mo cleaning';
+      document.getElementById('hh-quote-display').innerText = '"' + ctx.survey_note + '"';
+      document.getElementById('hh-income-display').innerText = ctx.income_band;
+      document.getElementById('hh-budget-display').innerText = ctx.budget;
+      document.getElementById('hh-baths-display').innerText = ctx.bathrooms;
+      document.getElementById('hh-usual-display').innerText = ctx.usual_brand;
 
       document.getElementById('banner-choice').innerText = data.pred_choice;
       document.getElementById('banner-conf').innerText = data.pred_confidence + '%';
@@ -787,7 +1009,8 @@ KEY METRICS:
     }
 
     // Run simulator on initial load
-    window.onload = () => {
+    window.onload = async () => {
+      await initHouseholds();
       runSim();
     };
   </script>
@@ -810,6 +1033,11 @@ class RequestHandler(BaseHTTPRequestHandler):
             self.send_header("Content-Type", "application/json")
             self.end_headers()
             self.wfile.write(json.dumps(runs).encode("utf-8"))
+        elif parsed.path == "/api/households":
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json")
+            self.end_headers()
+            self.wfile.write(json.dumps(HOUSEHOLDS).encode("utf-8"))
         elif parsed.path == "/health":
             self.send_response(200)
             self.send_header("Content-Type", "application/json")
