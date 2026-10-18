@@ -156,9 +156,38 @@ def show_discrete_review_taxonomy(visits: list[dict], check_visits: list[dict], 
         for p in phrases:
             print(f"    • '{p}': {sw_counts.get(p, 0)} occurrences")
 
-    print(f"\n3. household survey notes: 45 Permutations of 5 Opening + 9 Concern Sentences:")
+    print("\n3. household survey notes: 45 Permutations of 5 Opening + 9 Concern Sentences:")
     print("  Opening sentences (Shopping behavior): 'I buy supplies during one weekly trip', 'I usually buy the same cleaner', etc.")
     print("  Concern sentences (Specific priorities): 'I worry about cleaners that go down the drain', 'A refill pack leaked', etc.")
+    print()
+
+
+def show_feature_token_discovery(households: dict):
+    print("=" * 60)
+    print("Feature Engineering Token Discovery (Reproducible Extraction)")
+    print("=" * 60)
+    print("Programmatic extraction of text clauses mapped into choice model features:\n")
+
+    # Audit survey concern tokens across all households
+    tokens = {
+        "eco_concern": ["down the drain", "fewer plastic bottles"],
+        "green_skeptic": ["do not trust green claims"],
+        "packaging_complaint": ["refill pack leaked"],
+        "odor_aversion": ["sharp cleaner smell"],
+        "scent_affinity": ["fresh scent"],
+        "price_focus": ["low price"],
+    }
+
+    hh_list = list(households.values())
+    n_hh = len(hh_list)
+
+    for feature_group, phrases in tokens.items():
+        matching_hh = [h for h in hh_list if any(p in (h.get("note") or "").lower() for p in phrases)]
+        pct = len(matching_hh) / n_hh * 100
+        print(f"  Feature Token '{feature_group}':")
+        print(f"    • Keywords: {phrases}")
+        print(f"    • Matching Households: {len(matching_hh)}/{n_hh} ({pct:.1f}%)")
+        print(f"    • Mapped Choice Model Feature: '{feature_group}' interaction terms")
     print()
 
 
@@ -175,6 +204,7 @@ def main():
 
     show_behavioral_insights(visits, check_visits, households)
     show_discrete_review_taxonomy(visits, check_visits, households)
+    show_feature_token_discovery(households)
 
 
 if __name__ == "__main__":
