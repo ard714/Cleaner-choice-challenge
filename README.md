@@ -10,10 +10,10 @@ A complete decision intelligence platform, econometric multinomial choice model,
 | :--- | :--- |
 | 🌐 **Live Web Application** | **[https://cleaner-choice-challenge.onrender.com/](https://cleaner-choice-challenge.onrender.com/)** *(Interactive UI & JSON API)* |
 | 💻 **Single-Command Local Run** | `python run.py` *(Zero external dependencies — standard library only on laptop CPU)* |
-| 🗄️ **Experiment Run Database** | [`runs.db`](runs.db) *(SQLite database tracking all 14 runs with pre-registered hypotheses & metrics)* |
+| 🗄️ **Experiment Run Database** | [`runs.db`](runs.db) *(SQLite database tracking all 13 runs with pre-registered hypotheses & metrics)* |
 | 🐙 **Git Repository** | **[https://github.com/ard714/Cleaner-choice-challenge](https://github.com/ard714/Cleaner-choice-challenge)** |
 | 📝 **Initial Pre-Registration** | [`FIRST.md`](FIRST.md) *(Pre-registered initial concern and testing criteria — 114 words, $\le 120$ limit)* |
-| 🎯 **Final Strategic Decision** | [`FINAL.md`](FINAL.md) *(Strategic launch policy, unit economics, and falsification test — 175 words, $\le 200$ limit)* |
+| 🎯 **Final Strategic Decision** | [`FINAL.md`](FINAL.md) *(Strategic launch policy, unit economics, and falsification test — 172 words, $\le 200$ limit)* |
 | 📖 **Technical Methodology** | [`METHODS.md`](METHODS.md) *(Complete 11-section documentation of econometrics, runs, failed hypotheses & unit economics)* |
 | 🧭 **Interactive App Guide** | [`APP_GUIDE.md`](APP_GUIDE.md) *(Step-by-step user manual for what-if scenarios, trust testing, and CSV ingestion)* |
 
@@ -63,7 +63,7 @@ simco-intern-challenge-main/
 │   ├── run.bat                  # One-click Windows batch launcher
 │   ├── run.sh                   # Unix / macOS shell script launcher
 │   ├── app.py                   # Full interactive web application, REST API & simulation dashboard
-│   ├── runs.db                  # SQLite database tracking all 14 experimental runs
+│   ├── runs.db                  # SQLite database tracking all 13 experimental runs
 │   └── tracker.py               # SQLite logging & schema interface
 │
 ├── 🔬 Benchmarks & Core Models
