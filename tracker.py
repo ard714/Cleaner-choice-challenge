@@ -1,7 +1,8 @@
 """SQLite experiment tracker for Cleaner Choice Challenge.
 
-Records experiment runs, expectations, model versions, input configurations,
-and evaluation metrics to 'runs.db'. Allows inspection of past runs by ID.
+Records experiment runs, intentions, expectations, failure criteria,
+input configurations, evaluation metrics (accuracy, log loss, calibration),
+and learnings to 'runs.db'. Allows inspection of past runs by ID.
 Uses only Python standard library.
 """
 
@@ -22,7 +23,7 @@ def get_connection(db_path: Path = DB_PATH) -> sqlite3.Connection:
 
 
 def init_db(db_path: Path = DB_PATH):
-    """Initialize the runs table schema."""
+    """Initialize the runs table schema and migrate any missing columns."""
     with get_connection(db_path) as conn:
         conn.execute(
             """
@@ -46,6 +47,20 @@ def init_db(db_path: Path = DB_PATH):
         )
         conn.commit()
 
+        # Schema migration for enhanced experiment template columns
+        cur = conn.execute("PRAGMA table_info(runs)")
+        cols = {row["name"] for row in cur.fetchall()}
+        new_cols = [
+            ("intention", "TEXT"),
+            ("failure_criteria", "TEXT"),
+            ("log_loss", "REAL"),
+            ("brier_score", "REAL"),
+        ]
+        for col_name, col_type in new_cols:
+            if col_name not in cols:
+                conn.execute(f"ALTER TABLE runs ADD COLUMN {col_name} {col_type}")
+        conn.commit()
+
 
 def log_run(
     run_id: str,
@@ -54,8 +69,12 @@ def log_run(
     expectation: str,
     inputs_summary: str,
     outputs_summary: str,
+    intention: str = "",
+    failure_criteria: str = "",
     build_accuracy: Optional[float] = None,
     check_accuracy: Optional[float] = None,
+    log_loss: Optional[float] = None,
+    brier_score: Optional[float] = None,
     entrant_observed_build: Optional[float] = None,
     entrant_expected_build: Optional[float] = None,
     entrant_observed_check: Optional[float] = None,
@@ -63,29 +82,33 @@ def log_run(
     notes: str = "",
     db_path: Path = DB_PATH,
 ):
-    """Insert or replace an experiment run record."""
+    """Insert or replace an experiment run record following the standard experiment template."""
     init_db(db_path)
     now_iso = datetime.now(timezone.utc).isoformat()
     with get_connection(db_path) as conn:
         conn.execute(
             """
             INSERT OR REPLACE INTO runs (
-                run_id, timestamp, model_version, data_version, expectation,
-                inputs_summary, outputs_summary, build_accuracy, check_accuracy,
-                entrant_observed_build, entrant_expected_build,
+                run_id, timestamp, model_version, data_version, intention, expectation,
+                failure_criteria, inputs_summary, outputs_summary, build_accuracy, check_accuracy,
+                log_loss, brier_score, entrant_observed_build, entrant_expected_build,
                 entrant_observed_check, entrant_expected_check, notes
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
             (
                 run_id,
                 now_iso,
                 model_version,
                 data_version,
+                intention,
                 expectation,
+                failure_criteria,
                 inputs_summary,
                 outputs_summary,
                 build_accuracy,
                 check_accuracy,
+                log_loss,
+                brier_score,
                 entrant_observed_build,
                 entrant_expected_build,
                 entrant_observed_check,
@@ -119,17 +142,18 @@ def print_runs(db_path: Path = DB_PATH):
         print("No runs recorded yet in runs.db.")
         return
 
-    print("=" * 95)
-    print(f"{'Run ID':<22} | {'Model':<14} | {'Build Acc':<10} | {'Check Acc':<10} | {'Entrant Exp/Obs (Build)':<24}")
-    print("-" * 95)
+    print("=" * 105)
+    print(f"{'Run ID':<24} | {'Model':<14} | {'Build Acc':<10} | {'LogLoss':<9} | {'Entrant Exp/Obs':<18} | {'Status/Outcome':<18}")
+    print("-" * 105)
     for r in runs:
         b_acc = f"{r['build_accuracy']*100:.1f}%" if r["build_accuracy"] is not None else "N/A"
-        c_acc = f"{r['check_accuracy']*100:.1f}%" if r["check_accuracy"] is not None else "N/A"
+        ll = f"{r['log_loss']:.4f}" if r["log_loss"] is not None else "N/A"
         e_ratio = ""
         if r["entrant_expected_build"] is not None and r["entrant_observed_build"] is not None:
             e_ratio = f"{r['entrant_expected_build']*100:.1f}% / {r['entrant_observed_build']*100:.1f}%"
-        print(f"{r['run_id']:<22} | {r['model_version']:<14} | {b_acc:<10} | {c_acc:<10} | {e_ratio:<24}")
-    print("=" * 95)
+        outcome = r.get("notes", "")[:18] if r.get("notes") else "Logged"
+        print(f"{r['run_id']:<24} | {r['model_version']:<14} | {b_acc:<10} | {ll:<9} | {e_ratio:<18} | {outcome:<18}")
+    print("=" * 105)
 
 
 def show_run_details(run_id: str, db_path: Path = DB_PATH):
@@ -138,24 +162,35 @@ def show_run_details(run_id: str, db_path: Path = DB_PATH):
         print(f"Run '{run_id}' not found.")
         return
 
-    print("=" * 70)
-    print(f"Run ID: {run['run_id']}")
+    print("=" * 75)
+    print(f"EXPERIMENT RUN CARD: {run['run_id']}")
+    print("=" * 75)
     print(f"Timestamp (UTC): {run['timestamp']}")
     print(f"Model Version:   {run['model_version']}")
     print(f"Data Version:    {run['data_version']}")
-    print("-" * 70)
-    print(f"Expectation:\n  {run['expectation']}\n")
-    print(f"Inputs Summary:\n  {run['inputs_summary']}\n")
-    print(f"Outputs Summary:\n  {run['outputs_summary']}\n")
-    print(f"Build Accuracy:  {run['build_accuracy']*100:.1f}%" if run["build_accuracy"] is not None else "Build Acc: N/A")
-    print(f"Check Accuracy:  {run['check_accuracy']*100:.1f}%" if run["check_accuracy"] is not None else "Check Acc: N/A")
+    print("-" * 75)
+    if run.get("intention"):
+        print(f"1. INTENTION & HYPOTHESIS:\n   {run['intention']}\n")
+    print(f"2. PRE-RUN EXPECTATION:\n   {run['expectation']}\n")
+    if run.get("failure_criteria"):
+        print(f"3. FAILURE CRITERIA:\n   {run['failure_criteria']}\n")
+    print(f"4. INPUTS & CONFIGURATION:\n   {run['inputs_summary']}\n")
+    print(f"5. OUTPUTS & EMPIRICAL RESULTS:\n   {run['outputs_summary']}\n")
+    print("-" * 75)
+    print("KEY METRICS:")
+    if run["build_accuracy"] is not None:
+        print(f"  • Top-1 Accuracy (Build): {run['build_accuracy']*100:.1f}%")
+    if run.get("log_loss") is not None:
+        print(f"  • Multi-Class Log Loss:   {run['log_loss']:.4f}")
+    if run.get("brier_score") is not None:
+        print(f"  • Brier Score:            {run['brier_score']:.4f}")
     if run["entrant_observed_build"] is not None:
-        print(f"Build Entrant:   Expected {run['entrant_expected_build']*100:.1f}%, Observed {run['entrant_observed_build']*100:.1f}%")
-    if run["entrant_observed_check"] is not None:
-        print(f"Check Entrant:   Expected {run['entrant_expected_check']*100:.1f}%, Observed {run['entrant_observed_check']*100:.1f}%")
-    print("-" * 70)
-    print(f"Notes & Learnings:\n  {run['notes']}")
-    print("=" * 70)
+        print(f"  • Entrant Share (Build):  Expected {run['entrant_expected_build']*100:.1f}%, Observed {run['entrant_observed_build']*100:.1f}%")
+    if run["check_accuracy"] is not None:
+        print(f"  • Top-1 Accuracy (Check): {run['check_accuracy']*100:.1f}%")
+    print("-" * 75)
+    print(f"6. NOTES, OUTCOME & LEARNINGS:\n   {run['notes']}")
+    print("=" * 75)
 
 
 def export_runs_json(output_file: str = "runs_export.json", db_path: Path = DB_PATH):
