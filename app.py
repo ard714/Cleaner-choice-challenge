@@ -11,6 +11,7 @@ Usage:
 """
 
 import csv
+import io
 import json
 import math
 import sqlite3
@@ -133,6 +134,209 @@ def run_prediction(payload: dict) -> dict:
             "survey_note": raw_hh.get("note", "") or "(No free-text survey response provided)",
         },
     }
+
+
+def ingest_single_household(payload: dict) -> dict:
+    """Ingest a completely new household record into memory and evaluate choice live."""
+    hh = payload.get("household", {})
+    hid = (hh.get("household_id") or "H999_NEW").strip()
+    hh_data = {
+        "household_id": hid,
+        "income_band": hh.get("income_band", "50k_to_100k"),
+        "budget": hh.get("budget", "middle"),
+        "bathrooms": str(hh.get("bathrooms", "1")),
+        "usual_brand": hh.get("usual_brand", "standard"),
+        "cleaning_spend_usd": str(hh.get("cleaning_spend_usd", "15")),
+        "note": hh.get("note", ""),
+    }
+    # Persist in global memory for subsequent requests
+    HOUSEHOLDS[hid] = hh_data
+
+    visit = payload.get("visit", {})
+    ep = float(visit.get("entrant_price", 4.49))
+    emsg = visit.get("entrant_message", "environment")
+    ch = visit.get("channel", "online")
+
+    offers = {
+        "entrant": {"price": ep, "message": emsg},
+        "standard": {"price": float(visit.get("standard_price", 3.99))},
+        "budget": {"price": float(visit.get("budget_price", 2.99))},
+        "scented": {"price": float(visit.get("scented_price", 4.29))},
+    }
+    visit_dict = {"channel": ch, "visit_number": "1"}
+    history = payload.get("history", [])
+
+    prod_feats = {p: extract_features(p, offers, hh_data, visit_dict, history) for p in PRODUCTS}
+    scores = compute_utilities(CHAMPION_WEIGHTS, prod_feats)
+    probs = softmax(scores)
+    pred = max(probs, key=probs.get)
+    reasons = generate_grounded_reasons(pred, probs, prod_feats, CHAMPION_WEIGHTS, hh_data, offers)
+
+    return {
+        "household_id": hid,
+        "household_data": hh_data,
+        "offers": offers,
+        "channel": ch,
+        "pred_choice": pred,
+        "pred_confidence": round(probs[pred] * 100, 1),
+        "probabilities": {k: round(v, 4) for k, v in probs.items()},
+        "scores": {k: round(v, 3) for k, v in scores.items()},
+        "grounded_reasons": reasons,
+        "gross_rev_visit": round(ep * probs["entrant"], 2),
+    }
+
+
+def score_batch_csv(csv_content: str) -> dict:
+    """Ingest and score an entire batch CSV (households or visits) out-of-sample live."""
+    if not csv_content or not csv_content.strip():
+        return {"error": "CSV content is empty."}
+
+    reader = csv.DictReader(io.StringIO(csv_content.strip()))
+    fieldnames = [f.strip() for f in (reader.fieldnames or [])]
+    rows = list(reader)
+    if not rows:
+        return {"error": "CSV contains no data rows."}
+
+    is_visits = "entrant_price" in fieldnames or "channel" in fieldnames or "standard_price" in fieldnames
+    is_households = "income_band" in fieldnames and "budget" in fieldnames
+
+    if is_households and not is_visits:
+        new_count = 0
+        records = []
+        for r in rows:
+            clean_r = {k.strip(): v.strip() for k, v in r.items() if k}
+            hid = clean_r.get("household_id", f"H_NEW_{new_count+1}").strip()
+            clean_r["household_id"] = hid
+            HOUSEHOLDS[hid] = clean_r
+            new_count += 1
+
+            offers = {
+                "entrant": {"price": 4.49, "message": "environment"},
+                "standard": {"price": 3.99},
+                "budget": {"price": 2.99},
+                "scented": {"price": 4.29},
+            }
+            visit_dict = {"channel": "online", "visit_number": "1"}
+            prod_feats = {p: extract_features(p, offers, clean_r, visit_dict, []) for p in PRODUCTS}
+            scores = compute_utilities(CHAMPION_WEIGHTS, prod_feats)
+            probs = softmax(scores)
+            pred = max(probs, key=probs.get)
+            reasons = generate_grounded_reasons(pred, probs, prod_feats, CHAMPION_WEIGHTS, clean_r, offers)
+
+            records.append({
+                "household_id": hid,
+                "income_band": clean_r.get("income_band", ""),
+                "budget": clean_r.get("budget", ""),
+                "bathrooms": clean_r.get("bathrooms", ""),
+                "usual_brand": clean_r.get("usual_brand", ""),
+                "note": clean_r.get("note", ""),
+                "pred_choice": pred,
+                "pred_confidence": round(probs[pred] * 100, 1),
+                "probabilities": {k: round(v, 4) for k, v in probs.items()},
+                "reasons": reasons,
+            })
+        return {
+            "type": "households",
+            "count": new_count,
+            "records": records,
+        }
+    else:
+        history_by_hh = defaultdict(list)
+        records = []
+        total_eval = 0
+        correct_count = 0
+        log_loss_sum = 0.0
+        brier_sum = 0.0
+        entrant_pred_count = 0
+        entrant_true_count = 0
+
+        for idx, r in enumerate(rows):
+            clean_r = {k.strip(): v.strip() for k, v in r.items() if k}
+            hid = clean_r.get("household_id", "").strip() or "H001"
+            hh = HOUSEHOLDS.get(hid, {
+                "household_id": hid,
+                "income_band": clean_r.get("income_band", "50k_to_100k"),
+                "budget": clean_r.get("budget", "middle"),
+                "bathrooms": clean_r.get("bathrooms", "1"),
+                "usual_brand": clean_r.get("usual_brand", "standard"),
+                "note": clean_r.get("note", ""),
+            })
+
+            ep = float(clean_r.get("entrant_price", 4.49) or 4.49)
+            sp = float(clean_r.get("standard_price", 3.99) or 3.99)
+            bp = float(clean_r.get("budget_price", 2.99) or 2.99)
+            scp = float(clean_r.get("scented_price", 4.29) or 4.29)
+            ch = clean_r.get("channel", "online").strip().lower() or "online"
+            msg = clean_r.get("entrant_message", "environment").strip().lower() or "environment"
+            v_num = clean_r.get("visit_number", str(idx + 1)).strip()
+
+            offers = {
+                "entrant": {"price": ep, "message": msg},
+                "standard": {"price": sp},
+                "budget": {"price": bp},
+                "scented": {"price": scp},
+            }
+            visit_dict = {"channel": ch, "visit_number": v_num}
+            hist = history_by_hh[hid]
+
+            prod_feats = {p: extract_features(p, offers, hh, visit_dict, hist) for p in PRODUCTS}
+            scores = compute_utilities(CHAMPION_WEIGHTS, prod_feats)
+            probs = softmax(scores)
+            pred = max(probs, key=probs.get)
+            reasons = generate_grounded_reasons(pred, probs, prod_feats, CHAMPION_WEIGHTS, hh, offers)
+
+            true_c = clean_r.get("choice", "").strip().lower()
+            if true_c in PRODUCTS:
+                total_eval += 1
+                if pred == true_c:
+                    correct_count += 1
+                p_true = max(probs.get(true_c, 1e-12), 1e-12)
+                log_loss_sum -= math.log(p_true)
+                for p in PRODUCTS:
+                    y = 1.0 if p == true_c else 0.0
+                    brier_sum += (probs[p] - y) ** 2
+                if true_c == "entrant":
+                    entrant_true_count += 1
+
+            if pred == "entrant":
+                entrant_pred_count += 1
+
+            history_by_hh[hid].append({
+                "choice": true_c if true_c in PRODUCTS else pred,
+                "after_use_note": clean_r.get("after_use_note", "")
+            })
+
+            records.append({
+                "visit_index": idx + 1,
+                "household_id": hid,
+                "channel": ch,
+                "entrant_price": ep,
+                "entrant_message": msg,
+                "pred_choice": pred,
+                "pred_confidence": round(probs[pred] * 100, 1),
+                "true_choice": true_c if true_c in PRODUCTS else None,
+                "probabilities": {k: round(v, 4) for k, v in probs.items()},
+                "reasons": reasons,
+            })
+
+        metrics = None
+        if total_eval > 0:
+            metrics = {
+                "total_evaluated": total_eval,
+                "accuracy": round(correct_count / total_eval, 4),
+                "accuracy_pct": round((correct_count / total_eval) * 100, 2),
+                "log_loss": round(log_loss_sum / total_eval, 4),
+                "brier_score": round(brier_sum / total_eval, 4),
+                "pred_entrant_share": round((entrant_pred_count / len(rows)) * 100, 2),
+                "true_entrant_share": round((entrant_true_count / total_eval) * 100, 2),
+            }
+
+        return {
+            "type": "visits",
+            "count": len(rows),
+            "metrics": metrics,
+            "records": records,
+        }
 
 
 HTML_TEMPLATE = """<!DOCTYPE html>
@@ -453,6 +657,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       <button class="tab-btn active" onclick="switchTab('tab-predict')">What-If Simulator</button>
       <button class="tab-btn" onclick="switchTab('tab-runs')">SQLite Runs Inspector</button>
       <button class="tab-btn" onclick="switchTab('tab-policy')">Policy Matrix</button>
+      <button class="tab-btn" onclick="switchTab('tab-ingest')">Live Ingestion &amp; Scoring</button>
     </div>
   </header>
 
@@ -689,6 +894,170 @@ HTML_TEMPLATE = """<!DOCTYPE html>
             <strong>Falsification Test Trigger:</strong> In a real-world test, if the 60-day repeat reorder rate falls below <strong>20.0%</strong>, the product formulation fails to retain consumers and market share will rapidly erode.
           </p>
         </div>
+      </div>
+    </section>
+
+    <!-- TAB 4: LIVE DATA INGESTION & SCORING -->
+    <section id="tab-ingest" class="tab-content">
+      <div class="grid-2">
+
+        <!-- Column 1: Single New Household Ingestion -->
+        <div class="card">
+          <div class="card-title">1. Ingest Single New Household / Visit</div>
+          <p style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 1rem;">
+            Define an entirely new external household. Ingesting registers it in memory and evaluates choice probabilities live on laptop CPU.
+          </p>
+
+          <div style="display: flex; gap: 0.4rem; margin-bottom: 1rem; flex-wrap: wrap;">
+            <button type="button" class="tab-btn active" style="font-size: 0.75rem; padding: 0.3rem 0.6rem;" onclick="loadPresetNewHH('eco')">Preset: Eco Family</button>
+            <button type="button" class="tab-btn" style="font-size: 0.75rem; padding: 0.3rem 0.6rem; background: rgba(255,255,255,0.05); color: var(--text);" onclick="loadPresetNewHH('budget')">Preset: Budget Studio</button>
+            <button type="button" class="tab-btn" style="font-size: 0.75rem; padding: 0.3rem 0.6rem; background: rgba(255,255,255,0.05); color: var(--text);" onclick="loadPresetNewHH('large')">Preset: 4-Bath Villa</button>
+            <button type="button" class="tab-btn" style="font-size: 0.75rem; padding: 0.3rem 0.6rem; background: rgba(255,255,255,0.05); color: var(--text);" onclick="loadPresetNewHH('clear')">Clear</button>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem; margin-bottom: 0.75rem;">
+            <div>
+              <label style="font-size: 0.75rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Household ID</label>
+              <input type="text" id="ingest-hid" value="H999_NEW" style="margin-top: 0.2rem;">
+            </div>
+            <div>
+              <label style="font-size: 0.75rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Monthly Cleaning Spend ($)</label>
+              <input type="number" id="ingest-spend" value="28" style="margin-top: 0.2rem;">
+            </div>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem; margin-bottom: 0.75rem;">
+            <div>
+              <label style="font-size: 0.75rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Income Band</label>
+              <select id="ingest-income" style="margin-top: 0.2rem;">
+                <option value="under_50k">under_50k</option>
+                <option value="50k_to_100k">50k_to_100k</option>
+                <option value="over_100k" selected>over_100k</option>
+              </select>
+            </div>
+            <div>
+              <label style="font-size: 0.75rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Budget Pressure</label>
+              <select id="ingest-budget" style="margin-top: 0.2rem;">
+                <option value="tight">tight</option>
+                <option value="middle">middle</option>
+                <option value="generous" selected>generous</option>
+              </select>
+            </div>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem; margin-bottom: 0.75rem;">
+            <div>
+              <label style="font-size: 0.75rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Bathrooms</label>
+              <select id="ingest-baths" style="margin-top: 0.2rem;">
+                <option value="1">1 Bathroom</option>
+                <option value="2">2 Bathrooms</option>
+                <option value="3" selected>3+ Bathrooms</option>
+              </select>
+            </div>
+            <div>
+              <label style="font-size: 0.75rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Usual Brand</label>
+              <select id="ingest-brand" style="margin-top: 0.2rem;">
+                <option value="standard" selected>standard</option>
+                <option value="budget">budget</option>
+                <option value="scented">scented</option>
+                <option value="entrant">entrant</option>
+              </select>
+            </div>
+          </div>
+
+          <div style="margin-bottom: 0.75rem;">
+            <label style="font-size: 0.75rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Stated Survey Quote / Note</label>
+            <textarea id="ingest-note" rows="2" style="width: 100%; background: rgba(15, 23, 42, 0.8); border: 1px solid var(--card-border); color: #fff; padding: 0.5rem; border-radius: 8px; font-family: inherit; font-size: 0.85rem; margin-top: 0.2rem;">We have young kids and try to use plant-based cleaners without strong chemical fumes.</textarea>
+          </div>
+
+          <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--card-border); border-radius: 8px; padding: 0.75rem; margin-bottom: 1rem;">
+            <div style="font-size: 0.75rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 0.5rem;">Shopping Visit Conditions</div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.5rem;">
+              <div>
+                <label style="font-size: 0.7rem; color: var(--text-muted);">Entrant Price</label>
+                <input type="number" id="ingest-p" value="4.49" step="0.50" style="padding: 0.4rem; font-size: 0.8rem;">
+              </div>
+              <div>
+                <label style="font-size: 0.7rem; color: var(--text-muted);">Channel</label>
+                <select id="ingest-ch" style="padding: 0.4rem; font-size: 0.8rem;">
+                  <option value="online" selected>Online</option>
+                  <option value="retail">Retail</option>
+                </select>
+              </div>
+              <div>
+                <label style="font-size: 0.7rem; color: var(--text-muted);">Message</label>
+                <select id="ingest-msg" style="padding: 0.4rem; font-size: 0.8rem;">
+                  <option value="environment" selected>Environment</option>
+                  <option value="cleaning">Cleaning</option>
+                  <option value="low_odor">Low Odor</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <button type="button" class="tab-btn active" style="width: 100%; padding: 0.75rem; font-size: 0.95rem; border-radius: 8px;" onclick="submitSingleIngest()">
+            ⚡ Ingest &amp; Predict Live
+          </button>
+
+          <!-- Single Ingest Result Box -->
+          <div id="single-ingest-result" style="display: none; margin-top: 1.25rem;">
+            <div style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(59, 130, 246, 0.1) 100%); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 10px; padding: 1rem; margin-bottom: 1rem; display: flex; justify-content: space-between; align-items: center;">
+              <div>
+                <span class="tag tag-success" style="font-size: 0.65rem;">INGESTED IN MEMORY</span>
+                <div style="font-size: 1.3rem; font-weight: 800; color: var(--primary); text-transform: uppercase;" id="sir-choice">ENTRANT</div>
+              </div>
+              <div style="text-align: right;">
+                <div style="font-size: 0.75rem; color: var(--text-muted); font-weight: 700;">CONFIDENCE</div>
+                <div style="font-size: 1.3rem; font-weight: 800; color: #fff;" id="sir-conf">45.0%</div>
+              </div>
+            </div>
+            <div id="sir-bars" style="margin-bottom: 1rem;"></div>
+            <div style="background: rgba(15, 23, 42, 0.6); border: 1px solid var(--card-border); border-radius: 8px; padding: 0.85rem;">
+              <div style="font-size: 0.8rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 0.4rem;">Grounded Reasons</div>
+              <ul class="reason-list" id="sir-reasons"></ul>
+            </div>
+          </div>
+        </div>
+
+        <!-- Column 2: Batch CSV Ingestion & Evaluation -->
+        <div class="card">
+          <div class="card-title">2. Ingest &amp; Score Batch CSV Dataset</div>
+          <p style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 1rem;">
+            Paste or upload a CSV of new test visits or new households. If the CSV includes true shopper choices, the model will benchmark accuracy and log loss out-of-sample in real time.
+          </p>
+
+          <div style="display: flex; gap: 0.5rem; margin-bottom: 0.75rem; flex-wrap: wrap;">
+            <button type="button" class="tab-btn active" style="font-size: 0.75rem; padding: 0.3rem 0.6rem;" onclick="loadDemoCSV('check_visits')">Load 50 Holdout Visits</button>
+            <button type="button" class="tab-btn" style="font-size: 0.75rem; padding: 0.3rem 0.6rem; background: rgba(255,255,255,0.05); color: var(--text);" onclick="loadDemoCSV('new_households')">Load New Households CSV</button>
+            <label style="cursor: pointer; background: rgba(255,255,255,0.05); color: var(--text); padding: 0.3rem 0.6rem; border-radius: 7px; font-size: 0.75rem; font-weight: 600; display: inline-flex; align-items: center;">
+              📁 Upload CSV File
+              <input type="file" id="batch-file-input" accept=".csv" style="display: none;" onchange="handleCSVUpload(this)">
+            </label>
+          </div>
+
+          <div class="form-group">
+            <textarea id="batch-csv-area" rows="8" placeholder="Paste CSV text here with headers, e.g. household_id,visit_number,channel,entrant_price,entrant_message,standard_price,budget_price,scented_price,choice..." style="width: 100%; background: #050811; border: 1px solid var(--card-border); color: #cbd5e1; padding: 0.75rem; border-radius: 8px; font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; resize: vertical;"></textarea>
+          </div>
+
+          <button type="button" class="tab-btn active" style="width: 100%; padding: 0.75rem; font-size: 0.95rem; border-radius: 8px; margin-bottom: 1rem;" onclick="submitBatchCSV()">
+            🚀 Process &amp; Benchmark Batch Dataset
+          </button>
+
+          <!-- Batch Metrics & Output Table -->
+          <div id="batch-result-box" style="display: none;">
+            <div id="batch-metrics-grid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.5rem; margin-bottom: 1rem;"></div>
+
+            <div style="max-height: 320px; overflow-y: auto; border: 1px solid var(--card-border); border-radius: 8px;">
+              <table style="font-size: 0.75rem;">
+                <thead style="position: sticky; top: 0; background: #0b1120;">
+                  <tr id="batch-table-headers"></tr>
+                </thead>
+                <tbody id="batch-table-body"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
       </div>
     </section>
 
@@ -1008,6 +1377,261 @@ KEY METRICS:
       `;
     }
 
+    function loadPresetNewHH(type) {
+      if (type === 'eco') {
+        document.getElementById('ingest-hid').value = 'H999_ECO';
+        document.getElementById('ingest-spend').value = '30';
+        document.getElementById('ingest-income').value = 'over_100k';
+        document.getElementById('ingest-budget').value = 'generous';
+        document.getElementById('ingest-baths').value = '3';
+        document.getElementById('ingest-brand').value = 'standard';
+        document.getElementById('ingest-note').value = 'We have young kids and try to use plant-based cleaners without strong chemical fumes.';
+        document.getElementById('ingest-p').value = '4.49';
+        document.getElementById('ingest-ch').value = 'online';
+        document.getElementById('ingest-msg').value = 'environment';
+      } else if (type === 'budget') {
+        document.getElementById('ingest-hid').value = 'H999_BUDGET';
+        document.getElementById('ingest-spend').value = '10';
+        document.getElementById('ingest-income').value = 'under_50k';
+        document.getElementById('ingest-budget').value = 'tight';
+        document.getElementById('ingest-baths').value = '1';
+        document.getElementById('ingest-brand').value = 'budget';
+        document.getElementById('ingest-note').value = 'Living on a tight student budget, looking for lowest price point.';
+        document.getElementById('ingest-p').value = '3.49';
+        document.getElementById('ingest-ch').value = 'retail';
+        document.getElementById('ingest-msg').value = 'cleaning';
+      } else if (type === 'large') {
+        document.getElementById('ingest-hid').value = 'H999_VILLA';
+        document.getElementById('ingest-spend').value = '40';
+        document.getElementById('ingest-income').value = 'over_100k';
+        document.getElementById('ingest-budget').value = 'generous';
+        document.getElementById('ingest-baths').value = '3';
+        document.getElementById('ingest-brand').value = 'standard';
+        document.getElementById('ingest-note').value = 'Big house with 4 bathrooms and frequent supply turnover.';
+        document.getElementById('ingest-p').value = '4.49';
+        document.getElementById('ingest-ch').value = 'online';
+        document.getElementById('ingest-msg').value = 'cleaning';
+      } else {
+        document.getElementById('ingest-hid').value = 'H999_CUSTOM';
+        document.getElementById('ingest-spend').value = '15';
+        document.getElementById('ingest-income').value = '50k_to_100k';
+        document.getElementById('ingest-budget').value = 'middle';
+        document.getElementById('ingest-baths').value = '1';
+        document.getElementById('ingest-brand').value = 'standard';
+        document.getElementById('ingest-note').value = '';
+      }
+    }
+
+    async function submitSingleIngest() {
+      const payload = {
+        household: {
+          household_id: document.getElementById('ingest-hid').value || 'H999_NEW',
+          income_band: document.getElementById('ingest-income').value,
+          budget: document.getElementById('ingest-budget').value,
+          bathrooms: document.getElementById('ingest-baths').value,
+          usual_brand: document.getElementById('ingest-brand').value,
+          cleaning_spend_usd: document.getElementById('ingest-spend').value,
+          note: document.getElementById('ingest-note').value
+        },
+        visit: {
+          entrant_price: parseFloat(document.getElementById('ingest-p').value),
+          channel: document.getElementById('ingest-ch').value,
+          entrant_message: document.getElementById('ingest-msg').value
+        }
+      };
+
+      const res = await fetch('/api/ingest/single', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+
+      document.getElementById('single-ingest-result').style.display = 'block';
+      document.getElementById('sir-choice').innerText = data.pred_choice;
+      document.getElementById('sir-conf').innerText = data.pred_confidence + '% CONF';
+
+      const colors = {
+        entrant: 'fill-entrant',
+        standard: 'fill-standard',
+        budget: 'fill-budget',
+        scented: 'fill-scented',
+        none: 'fill-none'
+      };
+
+      let html = '';
+      for (const [prod, prob] of Object.entries(data.probabilities)) {
+        html += `
+          <div class="prob-bar-container">
+            <div class="prob-header">
+              <span style="text-transform: capitalize;">${prod}</span>
+              <span>${(prob * 100).toFixed(1)}%</span>
+            </div>
+            <div class="bar-wrapper">
+              <div class="bar-fill ${colors[prod]}" style="width: ${prob * 100}%;"></div>
+            </div>
+          </div>
+        `;
+      }
+      document.getElementById('sir-bars').innerHTML = html;
+
+      let rHtml = '';
+      for (const r of data.grounded_reasons) {
+        rHtml += `<li class="reason-item">${r}</li>`;
+      }
+      document.getElementById('sir-reasons').innerHTML = rHtml;
+
+      // Also refresh the main selector in Tab 1 so this new household is immediately selectable
+      initHouseholds();
+    }
+
+    function loadDemoCSV(type) {
+      if (type === 'check_visits') {
+        document.getElementById('batch-csv-area').value = 
+`household_id,visit_number,channel,entrant_price,entrant_message,standard_price,budget_price,scented_price,choice,after_use_note
+H201,1,online,4.49,environment,3.99,2.99,4.29,standard,It cleaned well.
+H201,2,online,4.49,cleaning,3.99,2.99,4.29,standard,
+H202,1,retail,3.49,environment,3.99,2.99,4.29,budget,
+H202,2,online,4.49,environment,3.99,2.99,4.29,entrant,It removed the stain I noticed.
+H203,1,online,5.49,low_odor,3.99,2.99,4.29,scented,The scent was fresh.
+H204,1,retail,3.49,cleaning,3.99,2.99,4.29,entrant,
+H205,1,online,4.49,environment,3.99,2.99,4.29,standard,`;
+      } else {
+        document.getElementById('batch-csv-area').value = 
+`household_id,income_band,cleaning_spend_usd,budget,bathrooms,usual_brand,note
+H901_NEW,over_100k,35,generous,3,standard,Looking for certified eco-friendly bathroom cleaners.
+H902_NEW,under_50k,12,tight,1,budget,Living on fixed income; price is all that matters.
+H903_NEW,50k_to_100k,20,middle,2,scented,Dislike harsh chemical fumes; prefer lavender scent.
+H904_NEW,over_100k,25,middle,3,standard,Three kids at home; tough grime and stain removal needed.`;
+      }
+    }
+
+    function handleCSVUpload(input) {
+      if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          document.getElementById('batch-csv-area').value = e.target.result;
+        };
+        reader.readAsText(input.files[0]);
+      }
+    }
+
+    async function submitBatchCSV() {
+      const csvText = document.getElementById('batch-csv-area').value;
+      if (!csvText.trim()) {
+        alert('Please paste or upload CSV data first.');
+        return;
+      }
+
+      const res = await fetch('/api/ingest/batch', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ csv_content: csvText })
+      });
+      const data = await res.json();
+      if (data.error) {
+        alert('Batch Processing Error: ' + data.error);
+        return;
+      }
+
+      document.getElementById('batch-result-box').style.display = 'block';
+
+      // Render Metrics Cards
+      let mHtml = `
+        <div style="background: rgba(15, 23, 42, 0.7); padding: 0.6rem; border-radius: 8px; border: 1px solid var(--card-border);">
+          <div style="font-size: 0.65rem; color: var(--text-muted); text-transform: uppercase;">Total Processed</div>
+          <div style="font-size: 1.2rem; font-weight: 800; color: #fff;">${data.count} ${data.type}</div>
+        </div>
+      `;
+
+      if (data.metrics) {
+        const m = data.metrics;
+        mHtml += `
+          <div style="background: rgba(15, 23, 42, 0.7); padding: 0.6rem; border-radius: 8px; border: 1px solid var(--card-border);">
+            <div style="font-size: 0.65rem; color: var(--text-muted); text-transform: uppercase;">Top-1 Accuracy</div>
+            <div style="font-size: 1.2rem; font-weight: 800; color: #34d399;">${m.accuracy_pct}%</div>
+          </div>
+          <div style="background: rgba(15, 23, 42, 0.7); padding: 0.6rem; border-radius: 8px; border: 1px solid var(--card-border);">
+            <div style="font-size: 0.65rem; color: var(--text-muted); text-transform: uppercase;">Log Loss</div>
+            <div style="font-size: 1.2rem; font-weight: 800; color: #60a5fa;">${m.log_loss.toFixed(4)}</div>
+          </div>
+          <div style="background: rgba(15, 23, 42, 0.7); padding: 0.6rem; border-radius: 8px; border: 1px solid var(--card-border);">
+            <div style="font-size: 0.65rem; color: var(--text-muted); text-transform: uppercase;">Entrant Share</div>
+            <div style="font-size: 1.1rem; font-weight: 800; color: #c084fc;">Pred ${m.pred_entrant_share}% / True ${m.true_entrant_share}%</div>
+          </div>
+        `;
+      } else {
+        mHtml += `
+          <div style="background: rgba(15, 23, 42, 0.7); padding: 0.6rem; border-radius: 8px; border: 1px solid var(--card-border); grid-column: span 3;">
+            <div style="font-size: 0.65rem; color: var(--text-muted); text-transform: uppercase;">Mode</div>
+            <div style="font-size: 0.9rem; font-weight: 700; color: #60a5fa;">Scored in-memory on standard catalog terms ($4.49, online, environment)</div>
+          </div>
+        `;
+      }
+      document.getElementById('batch-metrics-grid').innerHTML = mHtml;
+
+      // Render Table Headers & Rows
+      if (data.type === 'households') {
+        document.getElementById('batch-table-headers').innerHTML = `
+          <th>Household ID</th>
+          <th>Income</th>
+          <th>Budget</th>
+          <th>Baths</th>
+          <th>Usual</th>
+          <th>Predicted Choice</th>
+          <th>Confidence</th>
+          <th>Top Reason</th>
+        `;
+        let rowsHtml = '';
+        data.records.forEach(r => {
+          rowsHtml += `
+            <tr>
+              <td><strong>${r.household_id}</strong></td>
+              <td>${r.income_band}</td>
+              <td>${r.budget}</td>
+              <td>${r.bathrooms}</td>
+              <td>${r.usual_brand}</td>
+              <td><span class="tag ${r.pred_choice === 'entrant' ? 'tag-success' : 'tag-bench'}">${r.pred_choice.toUpperCase()}</span></td>
+              <td><strong>${r.pred_confidence}%</strong></td>
+              <td style="color: var(--text-muted);">${r.reasons[0] || 'N/A'}</td>
+            </tr>
+          `;
+        });
+        document.getElementById('batch-table-body').innerHTML = rowsHtml;
+      } else {
+        document.getElementById('batch-table-headers').innerHTML = `
+          <th>#</th>
+          <th>Household</th>
+          <th>Channel</th>
+          <th>Entrant Price</th>
+          <th>Predicted Choice</th>
+          <th>True Choice</th>
+          <th>Confidence</th>
+          <th>Grounded Reason</th>
+        `;
+        let rowsHtml = '';
+        data.records.forEach(r => {
+          const match = r.true_choice && (r.pred_choice.toLowerCase() === r.true_choice.toLowerCase());
+          rowsHtml += `
+            <tr>
+              <td>${r.visit_index}</td>
+              <td><strong>${r.household_id}</strong></td>
+              <td style="text-transform: capitalize;">${r.channel}</td>
+              <td>$${r.entrant_price.toFixed(2)}</td>
+              <td><span class="tag ${r.pred_choice === 'entrant' ? 'tag-success' : 'tag-bench'}">${r.pred_choice.toUpperCase()}</span></td>
+              <td>${r.true_choice ? `<span class="tag ${match ? 'tag-success' : 'tag-fail'}">${r.true_choice.toUpperCase()}</span>` : '<span style="color:var(--text-muted);">-</span>'}</td>
+              <td><strong>${r.pred_confidence}%</strong></td>
+              <td style="color: var(--text-muted);">${r.reasons[0] || 'N/A'}</td>
+            </tr>
+          `;
+        });
+        document.getElementById('batch-table-body').innerHTML = rowsHtml;
+      }
+
+      // Refresh Tab 1 dropdown so any new households are recognized
+      initHouseholds();
+    }
+
     // Run simulator on initial load
     window.onload = async () => {
       await initHouseholds();
@@ -1058,6 +1682,24 @@ class RequestHandler(BaseHTTPRequestHandler):
             self.send_header("Content-Type", "application/json")
             self.end_headers()
             self.wfile.write(json.dumps(pred).encode("utf-8"))
+        elif parsed.path == "/api/ingest/single":
+            length = int(self.headers.get("Content-Length", 0))
+            raw_body = self.rfile.read(length).decode("utf-8")
+            payload = json.loads(raw_body) if raw_body else {}
+            res = ingest_single_household(payload)
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json")
+            self.end_headers()
+            self.wfile.write(json.dumps(res).encode("utf-8"))
+        elif parsed.path == "/api/ingest/batch":
+            length = int(self.headers.get("Content-Length", 0))
+            raw_body = self.rfile.read(length).decode("utf-8")
+            payload = json.loads(raw_body) if raw_body else {}
+            res = score_batch_csv(payload.get("csv_content", ""))
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json")
+            self.end_headers()
+            self.wfile.write(json.dumps(res).encode("utf-8"))
         else:
             self.send_response(404)
             self.end_headers()
